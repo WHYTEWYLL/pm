@@ -7,9 +7,15 @@ from pathlib import Path
 from typing import List, Optional, Dict, Any, ContextManager
 from datetime import datetime, timezone
 from contextlib import contextmanager
-import psycopg2
-from psycopg2.extras import RealDictCursor
-from psycopg2.pool import SimpleConnectionPool
+try:
+    import psycopg2
+    from psycopg2.extras import RealDictCursor
+    from psycopg2.pool import SimpleConnectionPool
+    PSYCOPG2_AVAILABLE = True
+except ImportError:
+    PSYCOPG2_AVAILABLE = False
+    RealDictCursor = None
+    SimpleConnectionPool = None
 
 from ..config import settings
 
@@ -27,9 +33,11 @@ class TenantDatabase:
         """
         self.tenant_id = tenant_id
         self.db_url = db_url or os.getenv("DATABASE_URL")
-        self.use_postgres = self.db_url and self.db_url.startswith("postgresql")
+        self.use_postgres = self.db_url and self.db_url.startswith("postgresql") and PSYCOPG2_AVAILABLE
         
         if self.use_postgres:
+            if not PSYCOPG2_AVAILABLE:
+                raise ImportError("psycopg2 is required for PostgreSQL. Install with: pip install psycopg2-binary")
             # PostgreSQL connection pool
             self.pool = SimpleConnectionPool(1, 10, self.db_url)
         else:
