@@ -12,7 +12,7 @@ from .tenant import get_tenant_id
 from ..storage.tenant_db import TenantDatabase
 from ..storage.encryption import encrypt_token, decrypt_token
 
-router = APIRouter(prefix="/oauth", tags=["oauth"])
+router = APIRouter(prefix="/api/oauth", tags=["oauth"])
 
 
 def get_oauth_config():
