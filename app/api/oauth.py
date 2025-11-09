@@ -28,7 +28,6 @@ def get_oauth_config():
                 "groups:read",
                 "im:read",
                 "mpim:read",
-                "chat:read",
                 "users:read",
             ],
         },
