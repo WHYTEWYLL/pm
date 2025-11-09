@@ -130,6 +130,7 @@ async def oauth_callback(
 
     # Exchange code for token
     async with httpx.AsyncClient() as client:
+        refresh_token = None
         if service == "slack":
             response = await client.post(
                 config["token_url"],
@@ -195,8 +196,8 @@ async def oauth_callback(
                 raise HTTPException(status_code=400, detail=data["error"])
             
             access_token = data["access_token"]
-            refresh_token = data.get("refresh_token")
             expires_at = None  # GitHub tokens are long-lived
+            refresh_token = data.get("refresh_token")
             
             # Get user/org info
             user_response = await client.get(
