@@ -129,6 +129,26 @@ export default function DashboardPage() {
     },
   });
 
+  useEffect(() => {
+    const handler = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) {
+        return;
+      }
+      const payload = event.data;
+      if (payload?.type === 'oauth-complete' && payload?.service) {
+        queryClient.invalidateQueries({ queryKey: ['oauth', payload.service] });
+        if (payload.success) {
+          setStatusMessage(`${capitalize(payload.service)} connected successfully.`);
+        } else if (payload.error) {
+          setError(`Failed to connect ${payload.service}: ${payload.error}`);
+        }
+      }
+    };
+
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, [queryClient]);
+
   const disconnectMutation = useMutation({
     mutationFn: async (service: OAuthService) => {
       await axios.delete(`${API_URL}/api/oauth/${service}/disconnect`, {
