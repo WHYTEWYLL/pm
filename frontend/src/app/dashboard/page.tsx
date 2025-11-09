@@ -105,7 +105,24 @@ export default function DashboardPage() {
           headers: authHeaders,
         }
       );
-      window.location.href = res.data.auth_url;
+      const popup = window.open(
+        res.data.auth_url,
+        `${service}-auth`,
+        'width=640,height=720'
+      );
+
+      if (!popup) {
+        setError('Popup blocked. Please allow popups for this site and try again.');
+        return;
+      }
+
+      const timer = window.setInterval(() => {
+        if (popup.closed) {
+          window.clearInterval(timer);
+          queryClient.invalidateQueries({ queryKey: ['oauth', service] });
+          setStatusMessage(`${capitalize(service)} connection updated.`);
+        }
+      }, 500);
     },
     onError: () => {
       setError('Failed to start OAuth flow. Check credentials and try again.');
