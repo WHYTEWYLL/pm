@@ -12,7 +12,7 @@ from ..ingestion.slack import SlackService
 from ..ingestion.linear import LinearClient
 from ..storage.db import Database
 
-router = APIRouter(prefix="/workflows", tags=["workflows"])
+router = APIRouter(prefix="/api/workflows", tags=["workflows"])
 
 
 @router.post("/ingest/slack")
