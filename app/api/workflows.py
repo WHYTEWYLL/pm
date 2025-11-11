@@ -1,5 +1,6 @@
 """Workflow API endpoints."""
 
+import json
 import logging
 from datetime import datetime, timezone, timedelta
 import os
@@ -81,37 +82,82 @@ async def ingest_linear(
 
     token = decrypt_token(creds["access_token"])
 
+    # Check if linear_team_id is in config, else we list all teams and we get the data for all teams
+    
     # Get team_id from config
     config = db.get_tenant_config()
-    team_id = config.get("linear_team_id") if config else None
-    if isinstance(team_id, str):
-        cleaned = team_id.strip()
+    raw_team_id = config.get("linear_team_id") if config else None
+
+    team_ids: list[Optional[str]]
+    if isinstance(raw_team_id, list):
+        team_ids = [t for t in raw_team_id if t]
+    elif isinstance(raw_team_id, str):
+        cleaned = raw_team_id.strip()
         if not cleaned or cleaned.lower() in {"none", "null"}:
-            team_id = None
+            team_ids = []
         else:
-            team_id = cleaned
+            # Try to parse JSON array, fallback to single value
+            try:
+                parsed = json.loads(cleaned)
+                if isinstance(parsed, list):
+                    team_ids = [str(t) for t in parsed if t]
+                else:
+                    team_ids = [cleaned]
+            except json.JSONDecodeError:
+                team_ids = [cleaned]
+    else:
+        team_ids = []
+
+    if not team_ids:
+        # No specific team configured; ingest across all teams
+        team_ids = [None]
+
+    aggregated = {"total": 0, "stored": 0, "results": []}
 
     def run_ingestion():
         # Set tenant context
         os.environ["CURRENT_TENANT_ID"] = tenant_id
-        linear = LinearClient(api_key=token, team_id=team_id)
-        logger.info("Triggering Linear ingestion for tenant %s", tenant_id)
-        try:
-            result = linear.ingest()
+        for current_team in team_ids:
+            linear = LinearClient(api_key=token, team_id=current_team)
             logger.info(
-                "Linear ingestion finished for tenant %s: fetched=%s stored=%s",
+                "Triggering Linear ingestion for tenant %s (team=%s)",
                 tenant_id,
-                result.get("total"),
-                result.get("stored"),
+                current_team,
             )
-            return result
-        except Exception:
-            logger.exception("Linear ingestion failed for tenant %s", tenant_id)
-            raise
+            try:
+                result = linear.ingest()
+                aggregated["total"] += result.get("total", 0) or 0
+                aggregated["stored"] += result.get("stored", 0) or 0
+                aggregated["results"].append(
+                    {
+                        "team": current_team,
+                        "fetched": result.get("total", 0),
+                        "stored": result.get("stored", 0),
+                    }
+                )
+                logger.info(
+                    "Linear ingestion finished for tenant %s (team=%s): fetched=%s stored=%s",
+                    tenant_id,
+                    current_team,
+                    result.get("total"),
+                    result.get("stored"),
+                )
+            except Exception:
+                logger.exception(
+                    "Linear ingestion failed for tenant %s (team=%s)",
+                    tenant_id,
+                    current_team,
+                )
+                raise
+        return aggregated
 
     background_tasks.add_task(run_ingestion)
 
-    return {"status": "started", "message": "Ingestion started in background"}
+    return {
+        "status": "started",
+        "message": "Ingestion started in background",
+        "teams": team_ids,
+    }
 
 
 @router.get("/standup")
