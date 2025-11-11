@@ -294,6 +294,7 @@ class TenantDatabase:
                         workspace_name = EXCLUDED.workspace_name,
                         scopes = EXCLUDED.scopes,
                         token_expires_at = EXCLUDED.token_expires_at,
+                        is_active = TRUE,
                         updated_at = CURRENT_TIMESTAMP
                     RETURNING id
                 """,
@@ -313,10 +314,19 @@ class TenantDatabase:
                 cursor = conn.cursor()
                 cursor.execute(
                     """
-                    INSERT OR REPLACE INTO oauth_credentials 
+                    INSERT INTO oauth_credentials 
                     (tenant_id, service, access_token, refresh_token, workspace_id, 
                      workspace_name, scopes, token_expires_at, is_active)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
+                    ON CONFLICT(tenant_id, service, workspace_id)
+                    DO UPDATE SET
+                        access_token = excluded.access_token,
+                        refresh_token = excluded.refresh_token,
+                        workspace_name = excluded.workspace_name,
+                        scopes = excluded.scopes,
+                        token_expires_at = excluded.token_expires_at,
+                        is_active = 1,
+                        updated_at = CURRENT_TIMESTAMP
                 """,
                     (
                         self.tenant_id,
