@@ -83,7 +83,7 @@ async def ingest_linear(
     token = decrypt_token(creds["access_token"])
 
     # Check if linear_team_id is in config, else we list all teams and we get the data for all teams
-    
+
     # Get team_id from config
     config = db.get_tenant_config()
     raw_team_id = config.get("linear_team_id") if config else None
