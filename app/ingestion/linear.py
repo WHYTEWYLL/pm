@@ -43,6 +43,13 @@ class LinearClient:
             print(f"   HTTP Error {resp.status_code}: {resp.text}")
             resp.raise_for_status()
         data = resp.json()
+        snippet = " ".join(query.split())
+        if len(snippet) > 200:
+            snippet = f"{snippet[:200]}..."
+        print(f">>> Linear ingestion: GraphQL query: {snippet}")
+        if variables:
+            print(f">>> Linear ingestion: variables: {variables}")
+        print(f">>> Linear ingestion: GraphQL response: {data}")
         if "errors" in data:
             print(f"   GraphQL errors: {data['errors']}")
             raise RuntimeError(data["errors"])
@@ -91,14 +98,16 @@ class LinearClient:
         data = self._post(query)
         return data["viewer"]["id"]
 
-    def list_open_issues(self, assignee_only: bool = False) -> List[Dict[str, Any]]:
-        team_id = self._get_team_id()
+    def list_open_issues(
+        self, assignee_only: bool = False, team_id: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        target_team_id = team_id if team_id is not None else self._get_team_id()
 
         # Build filter
         filter_parts = ['state: {name: {nin: ["Done", "Canceled", "Duplicate"]}}']
 
-        if team_id:
-            filter_parts.insert(0, f'team: {{id: {{eq: "{team_id}"}}}}')
+        if target_team_id:
+            filter_parts.insert(0, f'team: {{id: {{eq: "{target_team_id}"}}}}')
 
         if assignee_only:
             viewer_id = self.get_viewer_id()
@@ -232,8 +241,57 @@ class LinearClient:
             store_in_db,
         )
         print(">>> Linear ingestion: starting fetch")
+
+        team_id = self._get_team_id()
+        print(f">>> Linear ingestion: team id: {team_id}")
+
         try:
-            issues = self.list_open_issues(assignee_only=assignee_only)
+            if team_id:
+                issues = self.list_open_issues(assignee_only=assignee_only)
+            else:
+                self.logger.info(
+                    "No team configured; fetching issues across all accessible teams"
+                )
+                teams_query = """
+                query {
+                  teams {
+                    nodes { id key name }
+                  }
+                }
+                """
+                teams = self._post(teams_query)["teams"]["nodes"]
+                print(
+                    f">>> Linear ingestion: discovered {len(teams)} teams in workspace"
+                )
+
+                aggregated: Dict[str, Dict[str, Any]] = {}
+                effective_assignee_only = assignee_only
+                if assignee_only:
+                    print(
+                        ">>> Linear ingestion: overriding assignee_only=True → False to capture all team issues"
+                    )
+                    effective_assignee_only = False
+                for entry in teams:
+                    current_team_id = entry.get("id")
+                    team_key = entry.get("key") or entry.get("name") or current_team_id
+                    if not current_team_id:
+                        continue
+                    print(
+                        f">>> Linear ingestion: fetching issues for team {team_key} ({current_team_id})"
+                    )
+                    team_issues = self.list_open_issues(
+                        assignee_only=effective_assignee_only,
+                        team_id=current_team_id,
+                    )
+                    print(
+                        f">>> Linear ingestion: fetched {len(team_issues)} issues for team {team_key}"
+                    )
+                    for issue in team_issues:
+                        aggregated[issue["id"]] = issue
+                issues = list(aggregated.values())
+                print(
+                    f">>> Linear ingestion: aggregated {len(issues)} unique issues across all teams"
+                )
             print(f">>> Linear ingestion: fetched {len(issues)} issues from API")
         except Exception as exc:
             self.logger.exception("Linear ingestion failed while fetching issues")
