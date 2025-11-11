@@ -212,6 +212,67 @@ class LinearClient:
         print(f"   Linear API response: {result}")
 
 
+    def ingest(
+        self, assignee_only: bool = True, store_in_db: bool = True
+    ) -> Dict[str, Any]:
+        """Fetch Linear issues and optionally persist them."""
+        issues = self.list_open_issues(assignee_only=assignee_only)
+
+        linear_issues: List[LinearIssue] = []
+        for issue in issues:
+            linear_issue = LinearIssue(
+                id=issue["id"],
+                identifier=issue["identifier"],
+                title=issue["title"],
+                description=issue.get("description"),
+                state_name=issue.get("state", {}).get("name", "Unknown"),
+                state_type=issue.get("state", {}).get("type", "unknown"),
+                url=issue["url"],
+                assignee_name=(
+                    issue.get("assignee", {}).get("name")
+                    if issue.get("assignee")
+                    else None
+                ),
+                parent_id=(
+                    issue.get("parent", {}).get("id")
+                    if issue.get("parent")
+                    else None
+                ),
+                parent_title=(
+                    issue.get("parent", {}).get("title")
+                    if issue.get("parent")
+                    else None
+                ),
+                original_created_at=issue.get("createdAt"),
+                original_updated_at=issue.get("updatedAt"),
+            )
+            linear_issues.append(linear_issue)
+
+        stored_count = 0
+        db_stats: Dict[str, Any] = {}
+        if store_in_db and linear_issues:
+            from ..storage.db import Database
+
+            db = Database()
+            stored_count = db.insert_linear_issues(linear_issues)
+            db_stats = db.get_linear_stats()
+
+        by_state: Dict[str, List[Dict[str, Any]]] = {}
+        for issue in issues:
+            state_type = issue.get("state", {}).get("type", "unknown")
+            if state_type not in by_state:
+                by_state[state_type] = []
+            by_state[state_type].append(issue)
+
+        return {
+            "issues": issues,
+            "by_state": by_state,
+            "total": len(issues),
+            "stored": stored_count,
+            "db_stats": db_stats,
+        }
+
+
 def run_ingestion(
     assignee_only: bool = True, store_in_db: bool = True
 ) -> Dict[str, Any]:
@@ -230,56 +291,7 @@ def run_ingestion(
     from ..storage.db import Database
 
     client = LinearClient()
-    issues = client.list_open_issues(assignee_only=assignee_only)
-
-    # Convert to LinearIssue objects
-    linear_issues = []
-    for issue in issues:
-        linear_issue = LinearIssue(
-            id=issue["id"],
-            identifier=issue["identifier"],
-            title=issue["title"],
-            description=issue.get("description"),
-            state_name=issue.get("state", {}).get("name", "Unknown"),
-            state_type=issue.get("state", {}).get("type", "unknown"),
-            url=issue["url"],
-            assignee_name=(
-                issue.get("assignee", {}).get("name") if issue.get("assignee") else None
-            ),
-            parent_id=(
-                issue.get("parent", {}).get("id") if issue.get("parent") else None
-            ),
-            parent_title=(
-                issue.get("parent", {}).get("title") if issue.get("parent") else None
-            ),
-            original_created_at=issue.get("createdAt"),
-            original_updated_at=issue.get("updatedAt"),
-        )
-        linear_issues.append(linear_issue)
-
-    # Store in database if requested
-    stored_count = 0
-    db_stats = {}
-    if store_in_db and linear_issues:
-        db = Database()
-        stored_count = db.insert_linear_issues(linear_issues)
-        db_stats = db.get_linear_stats()
-
-    # Group by state
-    by_state = {}
-    for issue in issues:
-        state_type = issue.get("state", {}).get("type", "unknown")
-        if state_type not in by_state:
-            by_state[state_type] = []
-        by_state[state_type].append(issue)
-
-    return {
-        "issues": issues,
-        "by_state": by_state,
-        "total": len(issues),
-        "stored": stored_count,
-        "db_stats": db_stats,
-    }
+    return client.ingest(assignee_only=assignee_only, store_in_db=store_in_db)
 
 
 if __name__ == "__main__":
