@@ -10,7 +10,15 @@ from ..models import LinearIssue
 class LinearClient:
     def __init__(self, api_key: Optional[str] = None, team_id: Optional[str] = None):
         self.api_key = api_key or settings.linear_api_key
-        self.team_id = team_id or settings.linear_team_id
+
+        raw_team_id = team_id if team_id is not None else settings.linear_team_id
+        if isinstance(raw_team_id, str):
+            cleaned = raw_team_id.strip()
+            if not cleaned or cleaned.lower() in {"none", "null"}:
+                raw_team_id = None
+            else:
+                raw_team_id = cleaned
+        self.team_id = raw_team_id
         if not self.api_key:
             raise ValueError("Missing LINEAR_API_KEY")
         self.endpoint = "https://api.linear.app/graphql"
