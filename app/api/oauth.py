@@ -154,14 +154,14 @@ async def oauth_callback(
         elif service == "linear":
             response = await client.post(
                 config["token_url"],
-                json={
+                data={
                     "client_id": config["client_id"],
                     "client_secret": config["client_secret"],
                     "code": code,
                     "redirect_uri": state_data["redirect_uri"],
                     "grant_type": "authorization_code",
                 },
-                headers={"Content-Type": "application/json"},
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
             )
             data = response.json()
             if "error" in data:
