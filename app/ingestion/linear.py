@@ -231,10 +231,13 @@ class LinearClient:
             assignee_only,
             store_in_db,
         )
+        print(">>> Linear ingestion: starting fetch")
         try:
             issues = self.list_open_issues(assignee_only=assignee_only)
+            print(f">>> Linear ingestion: fetched {len(issues)} issues from API")
         except Exception as exc:
             self.logger.exception("Linear ingestion failed while fetching issues")
+            print(f">>> Linear ingestion: fetch failed with error {exc!r}")
             raise
 
         linear_issues: List[LinearIssue] = []
@@ -273,6 +276,11 @@ class LinearClient:
             db = Database()
             stored_count = db.insert_linear_issues(linear_issues)
             db_stats = db.get_linear_stats()
+            print(
+                f">>> Linear ingestion: stored {stored_count} issues (db stats: {db_stats})"
+            )
+        else:
+            print(">>> Linear ingestion: skipping DB store (no issues or disabled)")
 
         by_state: Dict[str, List[Dict[str, Any]]] = {}
         for issue in issues:
@@ -285,6 +293,9 @@ class LinearClient:
             "Linear ingestion completed: fetched=%s, stored=%s",
             len(issues),
             stored_count,
+        )
+        print(
+            f">>> Linear ingestion: completed fetched={len(issues)} stored={stored_count}"
         )
 
         return {
