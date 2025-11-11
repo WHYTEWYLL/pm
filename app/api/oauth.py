@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import Dict, Any, Optional
+import logging
 import secrets
 import httpx
 import os
@@ -164,7 +165,11 @@ async def oauth_callback(
             )
             data = response.json()
             if "error" in data:
-                raise HTTPException(status_code=400, detail=data["error"])
+                logging.error("Linear token exchange failed: %s", data)
+                raise HTTPException(
+                    status_code=400,
+                    detail=data.get("error_description") or data["error"],
+                )
             
             access_token = data["access_token"]
             refresh_token = data.get("refresh_token")
