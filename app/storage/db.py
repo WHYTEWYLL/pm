@@ -31,9 +31,7 @@ class Database:
         db_url: Optional[str] = None,
     ):
         self.db_url = db_url or os.getenv("DATABASE_URL")
-        self.use_postgres = bool(
-            self.db_url and self.db_url.startswith("postgresql")
-        )
+        self.use_postgres = bool(self.db_url and self.db_url.startswith("postgresql"))
 
         if self.use_postgres:
             if not PSYCOPG2_AVAILABLE:
@@ -1040,7 +1038,11 @@ class Database:
             params: List[Any] = []
 
             if repo_full_name:
-                query += " AND repo_full_name = %s" if self.use_postgres else " AND repo_full_name = ?"
+                query += (
+                    " AND repo_full_name = %s"
+                    if self.use_postgres
+                    else " AND repo_full_name = ?"
+                )
                 params.append(repo_full_name)
 
             if state:
@@ -1069,7 +1071,11 @@ class Database:
             params: List[Any] = []
 
             if repo_full_name:
-                query += " AND repo_full_name = %s" if self.use_postgres else " AND repo_full_name = ?"
+                query += (
+                    " AND repo_full_name = %s"
+                    if self.use_postgres
+                    else " AND repo_full_name = ?"
+                )
                 params.append(repo_full_name)
 
             if state:
@@ -1257,19 +1263,35 @@ class Database:
             params: List[Any] = []
 
             if workflow_name:
-                query += " AND workflow_name = %s" if self.use_postgres else " AND workflow_name = ?"
+                query += (
+                    " AND workflow_name = %s"
+                    if self.use_postgres
+                    else " AND workflow_name = ?"
+                )
                 params.append(workflow_name)
 
             if entity_type:
-                query += " AND entity_type = %s" if self.use_postgres else " AND entity_type = ?"
+                query += (
+                    " AND entity_type = %s"
+                    if self.use_postgres
+                    else " AND entity_type = ?"
+                )
                 params.append(entity_type)
 
             if entity_identifier:
-                query += " AND entity_identifier = %s" if self.use_postgres else " AND entity_identifier = ?"
+                query += (
+                    " AND entity_identifier = %s"
+                    if self.use_postgres
+                    else " AND entity_identifier = ?"
+                )
                 params.append(entity_identifier)
 
             if since:
-                query += " AND created_at >= %s" if self.use_postgres else " AND created_at >= ?"
+                query += (
+                    " AND created_at >= %s"
+                    if self.use_postgres
+                    else " AND created_at >= ?"
+                )
                 params.append(since if self.use_postgres else since.isoformat())
 
             query += " ORDER BY created_at DESC"
