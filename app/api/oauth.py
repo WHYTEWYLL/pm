@@ -144,8 +144,10 @@ async def oauth_callback(
             )
             data = response.json()
             if not data.get("ok"):
-                raise HTTPException(status_code=400, detail=data.get("error", "Token exchange failed"))
-            
+                raise HTTPException(
+                    status_code=400, detail=data.get("error", "Token exchange failed")
+                )
+
             access_token = data["authed_user"]["access_token"]
             workspace_id = data["team"]["id"]
             workspace_name = data["team"]["name"]
@@ -170,16 +172,19 @@ async def oauth_callback(
                     status_code=400,
                     detail=data.get("error_description") or data["error"],
                 )
-            
+
             access_token = data["access_token"]
             refresh_token = data.get("refresh_token")
             expires_in = data.get("expires_in", 3600)
             expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
-            
+
             # Get workspace info
-            workspace_response = await client.get(
+            workspace_response = await client.post(
                 "https://api.linear.app/graphql",
-                headers={"Authorization": access_token},
+                headers={
+                    "Authorization": access_token,
+                    "Content-Type": "application/json",
+                },
                 json={"query": "{ viewer { id } }"},
             )
             workspace_id = "linear_workspace"  # Linear uses user-based auth
@@ -199,11 +204,11 @@ async def oauth_callback(
             data = response.json()
             if "error" in data:
                 raise HTTPException(status_code=400, detail=data["error"])
-            
+
             access_token = data["access_token"]
             expires_at = None  # GitHub tokens are long-lived
             refresh_token = data.get("refresh_token")
-            
+
             # Get user/org info
             user_response = await client.get(
                 "https://api.github.com/user",
@@ -241,10 +246,10 @@ async def get_oauth_status(
     """Check if a service is connected for this tenant."""
     db = TenantDatabase(tenant_id=tenant_id)
     creds = db.get_oauth_credentials(service)
-    
+
     if not creds:
         return {"connected": False, "service": service}
-    
+
     return {
         "connected": True,
         "service": service,
@@ -273,6 +278,5 @@ async def disconnect_oauth(
                 "UPDATE oauth_credentials SET is_active = 0 WHERE tenant_id = ? AND service = ?",
                 [tenant_id, service],
             )
-    
-    return {"status": "disconnected", "service": service}
 
+    return {"status": "disconnected", "service": service}
