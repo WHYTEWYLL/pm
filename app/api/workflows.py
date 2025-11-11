@@ -24,25 +24,26 @@ async def ingest_slack(
     """Trigger Slack ingestion for tenant."""
     if not check_subscription(tenant_id):
         raise HTTPException(status_code=403, detail="Subscription required")
-    
+
     db = get_tenant_db(tenant_id)
     creds = db.get_oauth_credentials("slack")
-    
+
     if not creds:
         raise HTTPException(status_code=400, detail="Slack not connected")
-    
+
     # Get tenant config
     config = db.get_tenant_config()
     target_channel_ids = config.get("slack_target_channel_ids", []) if config else []
-    
+
     # Decrypt token
     token = decrypt_token(creds["access_token"])
-    
+
     # Get tenant config for target channels
     if isinstance(target_channel_ids, str):
         import json
+
         target_channel_ids = json.loads(target_channel_ids)
-    
+
     # Run ingestion in background
     def run_ingestion():
         # Set tenant context for Database
@@ -54,9 +55,9 @@ async def ingest_slack(
             force_last_24h=True,
         )
         return result
-    
+
     background_tasks.add_task(run_ingestion)
-    
+
     return {"status": "started", "message": "Ingestion started in background"}
 
 
@@ -68,15 +69,15 @@ async def ingest_linear(
     """Trigger Linear ingestion for tenant."""
     if not check_subscription(tenant_id):
         raise HTTPException(status_code=403, detail="Subscription required")
-    
+
     db = get_tenant_db(tenant_id)
     creds = db.get_oauth_credentials("linear")
-    
+
     if not creds:
         raise HTTPException(status_code=400, detail="Linear not connected")
-    
+
     token = decrypt_token(creds["access_token"])
-    
+
     # Get team_id from config
     config = db.get_tenant_config()
     team_id = config.get("linear_team_id") if config else None
@@ -86,16 +87,16 @@ async def ingest_linear(
             team_id = None
         else:
             team_id = cleaned
-    
+
     def run_ingestion():
         # Set tenant context
         os.environ["CURRENT_TENANT_ID"] = tenant_id
         linear = LinearClient(api_key=token, team_id=team_id)
         result = linear.ingest()
         return result
-    
+
     background_tasks.add_task(run_ingestion)
-    
+
     return {"status": "started", "message": "Ingestion started in background"}
 
 
@@ -106,27 +107,27 @@ async def get_standup(
     """Get standup data for tenant."""
     if not check_subscription(tenant_id):
         raise HTTPException(status_code=403, detail="Subscription required")
-    
+
     db_tenant = get_tenant_db(tenant_id)
     creds = db_tenant.get_oauth_credentials("linear")
-    
+
     if not creds:
         raise HTTPException(status_code=400, detail="Linear not connected")
-    
+
     token = decrypt_token(creds["access_token"])
     config = db_tenant.get_tenant_config()
     team_id = config.get("linear_team_id") if config else None
-    
+
     # Import and call the actual standup workflow
     from ..workflows.dev.standup import generate_standup
-    
+
     # Temporarily set credentials for the workflow
     original_linear_key = os.getenv("LINEAR_API_KEY")
     original_team_id = os.getenv("LINEAR_TEAM_ID")
     os.environ["LINEAR_API_KEY"] = token
     if team_id:
         os.environ["LINEAR_TEAM_ID"] = team_id
-    
+
     try:
         result = generate_standup()
         # Convert to JSON-serializable format
@@ -182,20 +183,20 @@ async def process_messages(
     """Process messages and create/update tickets."""
     if not check_subscription(tenant_id):
         raise HTTPException(status_code=403, detail="Subscription required")
-    
+
     db_tenant = get_tenant_db(tenant_id)
     creds = db_tenant.get_oauth_credentials("linear")
-    
+
     if not creds:
         raise HTTPException(status_code=400, detail="Linear not connected")
-    
+
     token = decrypt_token(creds["access_token"])
     config = db_tenant.get_tenant_config()
     team_id = config.get("linear_team_id") if config else None
-    
+
     # Import and call the actual process workflow
     from ..workflows.process import process_messages as process_workflow
-    
+
     # Set credentials
     original_linear_key = os.getenv("LINEAR_API_KEY")
     original_team_id = os.getenv("LINEAR_TEAM_ID")
@@ -203,7 +204,7 @@ async def process_messages(
     if team_id:
         os.environ["LINEAR_TEAM_ID"] = team_id
     os.environ["CURRENT_TENANT_ID"] = tenant_id
-    
+
     try:
         result = process_workflow(dry_run=not execute, use_ai=True)
         return {
@@ -227,20 +228,20 @@ async def move_tickets(
     """Analyze and move tickets based on conversations."""
     if not check_subscription(tenant_id):
         raise HTTPException(status_code=403, detail="Subscription required")
-    
+
     db_tenant = get_tenant_db(tenant_id)
     creds = db_tenant.get_oauth_credentials("linear")
-    
+
     if not creds:
         raise HTTPException(status_code=400, detail="Linear not connected")
-    
+
     token = decrypt_token(creds["access_token"])
     config = db_tenant.get_tenant_config()
     team_id = config.get("linear_team_id") if config else None
-    
+
     # Import and call the actual move_tickets workflow
     from ..workflows.dev.move_tickets import process_ticket_status_changes
-    
+
     # Set credentials
     original_linear_key = os.getenv("LINEAR_API_KEY")
     original_team_id = os.getenv("LINEAR_TEAM_ID")
@@ -248,7 +249,7 @@ async def move_tickets(
     if team_id:
         os.environ["LINEAR_TEAM_ID"] = team_id
     os.environ["CURRENT_TENANT_ID"] = tenant_id
-    
+
     try:
         result = process_ticket_status_changes(days_back=7, min_confidence=0.7)
         return {
@@ -262,4 +263,3 @@ async def move_tickets(
             os.environ["LINEAR_API_KEY"] = original_linear_key
         if original_team_id:
             os.environ["LINEAR_TEAM_ID"] = original_team_id
-
