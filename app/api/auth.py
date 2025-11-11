@@ -189,10 +189,18 @@ async def register(user_data: UserRegistration):
     tenant_id = str(uuid.uuid4())
     tenant_email = user_data.email
     
-    # Insert user
+    # Insert tenant first (to satisfy FK) then user
     with db._conn() as conn:
         if db.use_postgres:
             cursor = conn.cursor()
+            cursor.execute(
+                """
+                INSERT INTO tenants (id, email, subscription_status, subscription_tier, owner_user_id)
+                VALUES (%s, %s, %s, %s, %s)
+                """,
+                [tenant_id, tenant_email, "trial", "free", user_id],
+            )
+
             cursor.execute(
                 """
                 INSERT INTO users (id, email, password_hash, full_name, email_verification_token, email_verification_expires, tenant_id)
@@ -208,17 +216,16 @@ async def register(user_data: UserRegistration):
                     tenant_id,
                 ],
             )
-            
-            # Create tenant
+        else:
+            cursor = conn.cursor()
             cursor.execute(
                 """
                 INSERT INTO tenants (id, email, subscription_status, subscription_tier, owner_user_id)
-                VALUES (%s, %s, %s, %s, %s)
+                VALUES (?, ?, ?, ?, ?)
                 """,
                 [tenant_id, tenant_email, "trial", "free", user_id],
             )
-        else:
-            cursor = conn.cursor()
+
             cursor.execute(
                 """
                 INSERT INTO users (id, email, password_hash, full_name, email_verification_token, email_verification_expires, tenant_id)
@@ -233,15 +240,6 @@ async def register(user_data: UserRegistration):
                     verification_expires.isoformat(),
                     tenant_id,
                 ],
-            )
-            
-            # Create tenant
-            cursor.execute(
-                """
-                INSERT INTO tenants (id, email, subscription_status, subscription_tier, owner_user_id)
-                VALUES (?, ?, ?, ?, ?)
-                """,
-                [tenant_id, tenant_email, "trial", "free", user_id],
             )
     
     # TODO: Send verification email
