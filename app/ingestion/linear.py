@@ -211,7 +211,6 @@ class LinearClient:
         result = self._post(mutation, {"issueId": issue_id, "stateId": target["id"]})
         print(f"   Linear API response: {result}")
 
-
     def ingest(
         self, assignee_only: bool = True, store_in_db: bool = True
     ) -> Dict[str, Any]:
@@ -234,9 +233,7 @@ class LinearClient:
                     else None
                 ),
                 parent_id=(
-                    issue.get("parent", {}).get("id")
-                    if issue.get("parent")
-                    else None
+                    issue.get("parent", {}).get("id") if issue.get("parent") else None
                 ),
                 parent_title=(
                     issue.get("parent", {}).get("title")
