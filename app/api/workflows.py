@@ -80,6 +80,12 @@ async def ingest_linear(
     # Get team_id from config
     config = db.get_tenant_config()
     team_id = config.get("linear_team_id") if config else None
+    if isinstance(team_id, str):
+        cleaned = team_id.strip()
+        if not cleaned or cleaned.lower() in {"none", "null"}:
+            team_id = None
+        else:
+            team_id = cleaned
     
     def run_ingestion():
         # Set tenant context
