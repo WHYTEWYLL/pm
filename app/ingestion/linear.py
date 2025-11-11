@@ -84,10 +84,10 @@ class LinearClient:
         team_id = self._get_team_id()
 
         # Build filter
-        filter_parts = [
-            f'team: {{id: {{eq: "{team_id}"}}}}',
-            'state: {name: {nin: ["Done", "Canceled", "Duplicate"]}}',
-        ]
+        filter_parts = ['state: {name: {nin: ["Done", "Canceled", "Duplicate"]}}']
+
+        if team_id:
+            filter_parts.insert(0, f'team: {{id: {{eq: "{team_id}"}}}}')
 
         if assignee_only:
             viewer_id = self.get_viewer_id()
