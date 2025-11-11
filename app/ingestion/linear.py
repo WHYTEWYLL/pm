@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Optional, Dict, Any, List
+import logging
 import requests
 
 from ..config import settings
@@ -8,6 +9,8 @@ from ..models import LinearIssue
 
 
 class LinearClient:
+    logger = logging.getLogger("linear_ingestion")
+
     def __init__(self, api_key: Optional[str] = None, team_id: Optional[str] = None):
         self.api_key = api_key or settings.linear_api_key
 
@@ -223,7 +226,16 @@ class LinearClient:
         self, assignee_only: bool = True, store_in_db: bool = True
     ) -> Dict[str, Any]:
         """Fetch Linear issues and optionally persist them."""
-        issues = self.list_open_issues(assignee_only=assignee_only)
+        self.logger.info(
+            "Starting Linear ingestion (assignee_only=%s, store_in_db=%s)",
+            assignee_only,
+            store_in_db,
+        )
+        try:
+            issues = self.list_open_issues(assignee_only=assignee_only)
+        except Exception as exc:
+            self.logger.exception("Linear ingestion failed while fetching issues")
+            raise
 
         linear_issues: List[LinearIssue] = []
         for issue in issues:
@@ -268,6 +280,12 @@ class LinearClient:
             if state_type not in by_state:
                 by_state[state_type] = []
             by_state[state_type].append(issue)
+
+        self.logger.info(
+            "Linear ingestion completed: fetched=%s, stored=%s",
+            len(issues),
+            stored_count,
+        )
 
         return {
             "issues": issues,

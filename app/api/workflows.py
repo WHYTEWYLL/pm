@@ -1,9 +1,11 @@
 """Workflow API endpoints."""
 
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
-from typing import Dict, Any, Optional
+import logging
 from datetime import datetime, timezone, timedelta
 import os
+from typing import Dict, Any, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 
 from .tenant import get_tenant_id, get_tenant_db, check_subscription
 from ..storage.tenant_db import TenantDatabase
@@ -13,6 +15,7 @@ from ..ingestion.linear import LinearClient
 from ..storage.db import Database
 
 router = APIRouter(prefix="/api/workflows", tags=["workflows"])
+logger = logging.getLogger("workflows")
 
 
 @router.post("/ingest/slack")
@@ -92,8 +95,19 @@ async def ingest_linear(
         # Set tenant context
         os.environ["CURRENT_TENANT_ID"] = tenant_id
         linear = LinearClient(api_key=token, team_id=team_id)
-        result = linear.ingest()
-        return result
+        logger.info("Triggering Linear ingestion for tenant %s", tenant_id)
+        try:
+            result = linear.ingest()
+            logger.info(
+                "Linear ingestion finished for tenant %s: fetched=%s stored=%s",
+                tenant_id,
+                result.get("total"),
+                result.get("stored"),
+            )
+            return result
+        except Exception:
+            logger.exception("Linear ingestion failed for tenant %s", tenant_id)
+            raise
 
     background_tasks.add_task(run_ingestion)
 
