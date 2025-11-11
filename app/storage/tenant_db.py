@@ -7,10 +7,12 @@ from pathlib import Path
 from typing import List, Optional, Dict, Any, ContextManager
 from datetime import datetime, timezone
 from contextlib import contextmanager
+
 try:
     import psycopg2
     from psycopg2.extras import RealDictCursor
     from psycopg2.pool import SimpleConnectionPool
+
     PSYCOPG2_AVAILABLE = True
 except ImportError:
     PSYCOPG2_AVAILABLE = False
@@ -33,11 +35,15 @@ class TenantDatabase:
         """
         self.tenant_id = tenant_id
         self.db_url = db_url or os.getenv("DATABASE_URL")
-        self.use_postgres = self.db_url and self.db_url.startswith("postgresql") and PSYCOPG2_AVAILABLE
-        
+        self.use_postgres = (
+            self.db_url and self.db_url.startswith("postgresql") and PSYCOPG2_AVAILABLE
+        )
+
         if self.use_postgres:
             if not PSYCOPG2_AVAILABLE:
-                raise ImportError("psycopg2 is required for PostgreSQL. Install with: pip install psycopg2-binary")
+                raise ImportError(
+                    "psycopg2 is required for PostgreSQL. Install with: pip install psycopg2-binary"
+                )
             # PostgreSQL connection pool
             self.pool = SimpleConnectionPool(1, 10, self.db_url)
         else:
@@ -45,7 +51,7 @@ class TenantDatabase:
             db_path = Path(os.getenv("DB_FILE_PATH", "./data/messages.db"))
             db_path.parent.mkdir(parents=True, exist_ok=True)
             self.db_path = db_path
-        
+
         # Initialize schema
         self._init_schema()
 
@@ -80,7 +86,8 @@ class TenantDatabase:
             if self.use_postgres:
                 # PostgreSQL schema
                 cursor = conn.cursor()
-                cursor.execute("""
+                cursor.execute(
+                    """
                     CREATE TABLE IF NOT EXISTS tenants (
                         id TEXT PRIMARY KEY,
                         email TEXT UNIQUE NOT NULL,
@@ -92,8 +99,10 @@ class TenantDatabase:
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )
-                """)
-                cursor.execute("""
+                """
+                )
+                cursor.execute(
+                    """
                     CREATE TABLE IF NOT EXISTS oauth_credentials (
                         id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
                         tenant_id TEXT NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
@@ -109,8 +118,10 @@ class TenantDatabase:
                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         UNIQUE(tenant_id, service, workspace_id)
                     )
-                """)
-                cursor.execute("""
+                """
+                )
+                cursor.execute(
+                    """
                     CREATE TABLE IF NOT EXISTS tenant_configs (
                         tenant_id TEXT PRIMARY KEY REFERENCES tenants(id) ON DELETE CASCADE,
                         slack_target_channel_ids JSONB DEFAULT '[]'::jsonb,
@@ -121,8 +132,10 @@ class TenantDatabase:
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )
-                """)
-                cursor.execute("""
+                """
+                )
+                cursor.execute(
+                    """
                 CREATE TABLE IF NOT EXISTS users (
                     id TEXT PRIMARY KEY,
                     email TEXT UNIQUE NOT NULL,
@@ -137,21 +150,33 @@ class TenantDatabase:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
-                """)
-                cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)")
-                cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_tenant_id ON users(tenant_id)")
-                cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_email_verification_token ON users(email_verification_token)")
-                cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_password_reset_token ON users(password_reset_token)")
-                
+                """
+                )
+                cursor.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)"
+                )
+                cursor.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_users_tenant_id ON users(tenant_id)"
+                )
+                cursor.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_users_email_verification_token ON users(email_verification_token)"
+                )
+                cursor.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_users_password_reset_token ON users(password_reset_token)"
+                )
+
                 # Add owner_user_id to tenants if it doesn't exist
                 try:
-                    cursor.execute("ALTER TABLE tenants ADD COLUMN IF NOT EXISTS owner_user_id TEXT REFERENCES users(id) ON DELETE SET NULL")
+                    cursor.execute(
+                        "ALTER TABLE tenants ADD COLUMN IF NOT EXISTS owner_user_id TEXT REFERENCES users(id) ON DELETE SET NULL"
+                    )
                 except Exception:
                     pass  # Column already exists or not supported
             else:
                 # SQLite schema
                 cursor = conn.cursor()
-                cursor.execute("""
+                cursor.execute(
+                    """
                     CREATE TABLE IF NOT EXISTS tenants (
                         id TEXT PRIMARY KEY,
                         email TEXT UNIQUE NOT NULL,
@@ -162,8 +187,10 @@ class TenantDatabase:
                         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
                         updated_at TEXT DEFAULT CURRENT_TIMESTAMP
                     )
-                """)
-                cursor.execute("""
+                """
+                )
+                cursor.execute(
+                    """
                     CREATE TABLE IF NOT EXISTS oauth_credentials (
                         id TEXT PRIMARY KEY,
                         tenant_id TEXT NOT NULL,
@@ -179,8 +206,10 @@ class TenantDatabase:
                         updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
                         UNIQUE(tenant_id, service, workspace_id)
                     )
-                """)
-                cursor.execute("""
+                """
+                )
+                cursor.execute(
+                    """
                 CREATE TABLE IF NOT EXISTS tenant_configs (
                     tenant_id TEXT PRIMARY KEY,
                     slack_target_channel_ids TEXT DEFAULT '[]',
@@ -191,8 +220,10 @@ class TenantDatabase:
                     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
                     updated_at TEXT DEFAULT CURRENT_TIMESTAMP
                 )
-                """)
-                cursor.execute("""
+                """
+                )
+                cursor.execute(
+                    """
                 CREATE TABLE IF NOT EXISTS users (
                     id TEXT PRIMARY KEY,
                     email TEXT UNIQUE NOT NULL,
@@ -207,12 +238,21 @@ class TenantDatabase:
                     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
                     updated_at TEXT DEFAULT CURRENT_TIMESTAMP
                 )
-                """)
-                cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)")
-                cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_tenant_id ON users(tenant_id)")
-                cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_email_verification_token ON users(email_verification_token)")
-                cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_password_reset_token ON users(password_reset_token)")
-                
+                """
+                )
+                cursor.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)"
+                )
+                cursor.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_users_tenant_id ON users(tenant_id)"
+                )
+                cursor.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_users_email_verification_token ON users(email_verification_token)"
+                )
+                cursor.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_users_password_reset_token ON users(password_reset_token)"
+                )
+
                 # Add owner_user_id to tenants if it doesn't exist
                 try:
                     cursor.execute("ALTER TABLE tenants ADD COLUMN owner_user_id TEXT")
@@ -220,16 +260,26 @@ class TenantDatabase:
                     pass  # Column already exists
             conn.commit()
 
-    def _ensure_tenant_filter(self, query: str, params: List[Any]) -> tuple[str, List[Any]]:
+    def _ensure_tenant_filter(
+        self, query: str, params: List[Any]
+    ) -> tuple[str, List[Any]]:
         """Add tenant_id filter to query if tenant_id is set."""
         if not self.tenant_id:
             return query, params
-        
+
         if "WHERE" in query.upper():
-            query += f" AND tenant_id = ?" if not self.use_postgres else f" AND tenant_id = %s"
+            query += (
+                f" AND tenant_id = ?"
+                if not self.use_postgres
+                else f" AND tenant_id = %s"
+            )
         else:
-            query += f" WHERE tenant_id = ?" if not self.use_postgres else f" WHERE tenant_id = %s"
-        
+            query += (
+                f" WHERE tenant_id = ?"
+                if not self.use_postgres
+                else f" WHERE tenant_id = %s"
+            )
+
         params.append(self.tenant_id)
         return query, params
 
@@ -347,7 +397,8 @@ class TenantDatabase:
             if self.use_postgres:
                 cursor = conn.cursor(cursor_factory=RealDictCursor)
                 cursor.execute(
-                    "SELECT * FROM tenant_configs WHERE tenant_id = %s", [self.tenant_id]
+                    "SELECT * FROM tenant_configs WHERE tenant_id = %s",
+                    [self.tenant_id],
                 )
                 row = cursor.fetchone()
                 return dict(row) if row else None
@@ -402,4 +453,3 @@ class TenantDatabase:
                         str(config.get("workflow_settings", "{}")),
                     ),
                 )
-
