@@ -248,18 +248,19 @@ class LinearClient:
         try:
             if team_id:
                 issues = self.list_open_issues(assignee_only=assignee_only)
+                print(f">>> Linear ingestion: fetched {len(issues)} issues from API")
             else:
                 self.logger.info(
                     "No team configured; fetching issues across all accessible teams"
                 )
-            teams_query = """
-            query {
-              teams {
+                teams_query = """
+                query {
+                  teams {
                     nodes { id key name }
-              }
-            }
-            """
-            teams = self._post(teams_query)["teams"]["nodes"]
+                  }
+                }
+                """
+                teams = self._post(teams_query)["teams"]["nodes"]
                 print(
                     f">>> Linear ingestion: discovered {len(teams)} teams in workspace"
                 )
@@ -292,7 +293,7 @@ class LinearClient:
                 print(
                     f">>> Linear ingestion: aggregated {len(issues)} unique issues across all teams"
                 )
-            print(f">>> Linear ingestion: fetched {len(issues)} issues from API")
+                print(f">>> Linear ingestion: fetched {len(issues)} issues from API")
         except Exception as exc:
             self.logger.exception("Linear ingestion failed while fetching issues")
             print(f">>> Linear ingestion: fetch failed with error {exc!r}")
