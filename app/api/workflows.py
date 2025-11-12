@@ -208,14 +208,27 @@ async def ingest_github(
         issues = []
 
         print(">>> GitHub ingestion: starting fetch")
+        print(
+            f">>> GitHub ingestion: config - owner={github_owner}, repos={github_repos}"
+        )
         try:
+            # Check what repos we have access to
+            repos = client.get_repositories(
+                owner=github_owner,
+                repo_names=github_repos if github_repos else None,
+            )
+            print(f">>> GitHub ingestion: found {len(repos)} repositories")
+            if repos:
+                repo_names = [repo.full_name for repo in repos[:5]]  # Show first 5
+                print(f">>> GitHub ingestion: sample repos: {repo_names}")
+
             prs = client.list_pull_requests(
                 owner=github_owner,
                 repo_names=github_repos if github_repos else None,
                 state="all",
                 since=since,
             )
-            print(f">>> GitHub ingestion: fetched {len(prs)} PRs from API")
+            print(f">>> GitHub ingestion: fetched {len(prs)} PRs from API (last 24h)")
 
             issues = client.list_issues(
                 owner=github_owner,
@@ -223,7 +236,9 @@ async def ingest_github(
                 state="all",
                 since=since,
             )
-            print(f">>> GitHub ingestion: fetched {len(issues)} issues from API")
+            print(
+                f">>> GitHub ingestion: fetched {len(issues)} issues from API (last 24h)"
+            )
         except Exception as exc:
             logger.exception("GitHub ingestion failed while fetching")
             print(f">>> GitHub ingestion: fetch failed with error {exc!r}")
