@@ -13,6 +13,7 @@ from ..storage.tenant_db import TenantDatabase
 from ..storage.encryption import decrypt_token
 from ..ingestion.slack import SlackService
 from ..ingestion.linear import LinearClient
+from ..ingestion.github import GitHubClient
 from ..storage.db import Database
 
 router = APIRouter(prefix="/api/workflows", tags=["workflows"])
@@ -158,6 +159,118 @@ async def ingest_linear(
         "message": "Ingestion started in background",
         "teams": team_ids,
     }
+
+
+@router.post("/ingest/github")
+async def ingest_github(
+    background_tasks: BackgroundTasks,
+    tenant_id: str = Depends(get_tenant_id),
+):
+    """Trigger GitHub ingestion for tenant."""
+    if not check_subscription(tenant_id):
+        raise HTTPException(status_code=403, detail="Subscription required")
+
+    db = get_tenant_db(tenant_id)
+    creds = db.get_oauth_credentials("github")
+
+    if not creds:
+        raise HTTPException(status_code=400, detail="GitHub not connected")
+
+    # Decrypt token
+    token = decrypt_token(creds["access_token"])
+
+    # Get tenant config for repo filtering
+    config = db.get_tenant_config()
+    github_owner = config.get("github_owner") if config else None
+    github_repos = config.get("github_repos") if config else None
+
+    # Parse repos if it's a string
+    if isinstance(github_repos, str):
+        try:
+            github_repos = json.loads(github_repos)
+        except json.JSONDecodeError:
+            # If not JSON, treat as comma-separated
+            github_repos = [r.strip() for r in github_repos.split(",") if r.strip()]
+
+    # Run ingestion in background
+    def run_ingestion():
+        # Set tenant context for Database
+        os.environ["CURRENT_TENANT_ID"] = tenant_id
+        from datetime import datetime, timezone, timedelta
+
+        # Use OAuth token instead of settings
+        client = GitHubClient(token=token)
+
+        # Fetch PRs and issues updated in the last 24 hours
+        since = datetime.now(timezone.utc) - timedelta(hours=24)
+
+        prs = []
+        issues = []
+
+        print(">>> GitHub ingestion: starting fetch")
+        try:
+            prs = client.list_pull_requests(
+                owner=github_owner,
+                repo_names=github_repos if github_repos else None,
+                state="all",
+                since=since,
+            )
+            print(f">>> GitHub ingestion: fetched {len(prs)} PRs from API")
+
+            issues = client.list_issues(
+                owner=github_owner,
+                repo_names=github_repos if github_repos else None,
+                state="all",
+                since=since,
+            )
+            print(f">>> GitHub ingestion: fetched {len(issues)} issues from API")
+        except Exception as exc:
+            logger.exception("GitHub ingestion failed while fetching")
+            print(f">>> GitHub ingestion: fetch failed with error {exc!r}")
+            raise
+
+        # Store in database
+        stored_prs = 0
+        stored_issues = 0
+        db_stats = {}
+        if prs or issues:
+            db = Database()
+            if prs:
+                stored_prs = db.insert_github_prs(prs)
+            if issues:
+                stored_issues = db.insert_github_issues(issues)
+            db_stats = db.get_github_stats()
+            print(
+                f">>> GitHub ingestion: stored {stored_prs} PRs and {stored_issues} issues (db stats: {db_stats})"
+            )
+        else:
+            print(">>> GitHub ingestion: skipping DB store (no PRs/issues)")
+
+        logger.info(
+            "GitHub ingestion finished for tenant %s: prs=%s issues=%s stored_prs=%s stored_issues=%s",
+            tenant_id,
+            len(prs),
+            len(issues),
+            stored_prs,
+            stored_issues,
+        )
+        print(
+            f">>> GitHub ingestion: completed prs={len(prs)} issues={len(issues)} stored_prs={stored_prs} stored_issues={stored_issues}"
+        )
+
+        return {
+            "prs": prs,
+            "issues": issues,
+            "total_prs": len(prs),
+            "total_issues": len(issues),
+            "stored_prs": stored_prs,
+            "stored_issues": stored_issues,
+            "db_stats": db_stats,
+        }
+
+    background_tasks.add_task(run_ingestion)
+
+    return {"status": "started", "message": "GitHub ingestion started in background"}
 
 
 @router.get("/standup")

@@ -252,14 +252,14 @@ class LinearClient:
                 self.logger.info(
                     "No team configured; fetching issues across all accessible teams"
                 )
-                teams_query = """
-                query {
-                  teams {
+            teams_query = """
+            query {
+              teams {
                     nodes { id key name }
-                  }
-                }
-                """
-                teams = self._post(teams_query)["teams"]["nodes"]
+              }
+            }
+            """
+            teams = self._post(teams_query)["teams"]["nodes"]
                 print(
                     f">>> Linear ingestion: discovered {len(teams)} teams in workspace"
                 )
