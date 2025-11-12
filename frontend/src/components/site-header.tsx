@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { loadSession, clearSession } from "../lib/auth";
 import { useRouter, usePathname } from "next/navigation";
+import { CortaLogo } from "./corta-logo";
 
 export function SiteHeader() {
   const [isMounted, setIsMounted] = useState(false);
@@ -44,10 +45,7 @@ export function SiteHeader() {
     <header className="border-b border-slate-200 bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/80">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
         <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-brand-600 font-bold text-white">
-            PM
-          </span>
-          PM Assistant
+          <CortaLogo />
         </Link>
         <nav className="flex items-center gap-4 text-sm font-medium text-slate-600">
           <Link className={linkClass("/#features")} href="/#features">

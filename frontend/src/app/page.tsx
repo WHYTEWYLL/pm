@@ -16,7 +16,7 @@ export default function LandingPage() {
               <span className="text-brand-600">real-time AI assistance</span>
             </h1>
             <p className="mt-6 text-lg leading-8 text-slate-600">
-              PM Assistant ingests Slack conversations, GitHub activity, and
+              CORTA ingests Slack conversations, GitHub activity, and
               Linear tickets every day. The result: daily standups, automated
               ticket updates, and weekly summaries delivered without manual
               chasing.
@@ -199,7 +199,7 @@ export default function LandingPage() {
       <section className="bg-white py-16">
         <div className="mx-auto max-w-4xl rounded-2xl border border-brand-100 bg-brand-50 px-10 py-12 text-center shadow-lg shadow-brand-200/40">
           <h2 className="text-3xl font-semibold text-slate-900">
-            Ready to launch an AI-powered PM assistant for your org?
+            Ready to launch CORTA for your org?
           </h2>
           <p className="mt-4 text-lg text-slate-600">
             Connect Slack, Linear, and GitHub with secure OAuth, then let the assistant run daily
