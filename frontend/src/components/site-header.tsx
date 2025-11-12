@@ -56,10 +56,10 @@ export function SiteHeader() {
               <defs>
                 <mask id="crescent-mask-header">
                   <rect width="20" height="20" fill="black" />
-                  <circle cx="12" cy="10" r="5.5" fill="white" />
+                  <circle cx="13" cy="10" r="4.5" fill="white" />
                 </mask>
               </defs>
-              <circle cx="10" cy="10" r="7" fill="white" mask="url(#crescent-mask-header)" />
+              <circle cx="10" cy="10" r="8" fill="white" mask="url(#crescent-mask-header)" />
             </svg>
           </span>
           PM Assistant
