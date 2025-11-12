@@ -261,38 +261,36 @@ class LinearClient:
             }
             """
             teams = self._post(teams_query)["teams"]["nodes"]
-                print(
-                    f">>> Linear ingestion: discovered {len(teams)} teams in workspace"
-                )
+            print(f">>> Linear ingestion: discovered {len(teams)} teams in workspace")
 
-                aggregated: Dict[str, Dict[str, Any]] = {}
-                effective_assignee_only = assignee_only
-                if assignee_only:
-                    print(
-                        ">>> Linear ingestion: overriding assignee_only=True → False to capture all team issues"
-                    )
-                    effective_assignee_only = False
-                for entry in teams:
-                    current_team_id = entry.get("id")
-                    team_key = entry.get("key") or entry.get("name") or current_team_id
-                    if not current_team_id:
-                        continue
-                    print(
-                        f">>> Linear ingestion: fetching issues for team {team_key} ({current_team_id})"
-                    )
-                    team_issues = self.list_open_issues(
-                        assignee_only=effective_assignee_only,
-                        team_id=current_team_id,
-                    )
-                    print(
-                        f">>> Linear ingestion: fetched {len(team_issues)} issues for team {team_key}"
-                    )
-                    for issue in team_issues:
-                        aggregated[issue["id"]] = issue
-                issues = list(aggregated.values())
+            aggregated: Dict[str, Dict[str, Any]] = {}
+            effective_assignee_only = assignee_only
+            if assignee_only:
                 print(
-                    f">>> Linear ingestion: aggregated {len(issues)} unique issues across all teams"
+                    ">>> Linear ingestion: overriding assignee_only=True → False to capture all team issues"
                 )
+                effective_assignee_only = False
+            for entry in teams:
+                current_team_id = entry.get("id")
+                team_key = entry.get("key") or entry.get("name") or current_team_id
+                if not current_team_id:
+                    continue
+                print(
+                    f">>> Linear ingestion: fetching issues for team {team_key} ({current_team_id})"
+                )
+                team_issues = self.list_open_issues(
+                    assignee_only=effective_assignee_only,
+                    team_id=current_team_id,
+                )
+                print(
+                    f">>> Linear ingestion: fetched {len(team_issues)} issues for team {team_key}"
+                )
+                for issue in team_issues:
+                    aggregated[issue["id"]] = issue
+            issues = list(aggregated.values())
+            print(
+                f">>> Linear ingestion: aggregated {len(issues)} unique issues across all teams"
+            )
             print(f">>> Linear ingestion: fetched {len(issues)} issues from API")
         except Exception as exc:
             self.logger.exception("Linear ingestion failed while fetching issues")
