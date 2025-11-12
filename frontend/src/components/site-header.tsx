@@ -44,7 +44,24 @@ export function SiteHeader() {
     <header className="border-b border-slate-200 bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/80">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
         <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
-          <span className="inline-flex h-8 w-8 rounded-full bg-gradient-to-r from-blue-800 to-blue-400"></span>
+          <span className="relative inline-flex h-8 w-8 items-center justify-center">
+            {/* Outer dark blue ring and lighter blue interior */}
+            <span className="absolute inset-0 rounded-full border-2 border-blue-800 bg-blue-400"></span>
+            {/* White crescent on the left side - styled like a "C" */}
+            <svg
+              className="absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2"
+              viewBox="0 0 20 20"
+              fill="none"
+            >
+              <defs>
+                <mask id="crescent-mask-header">
+                  <rect width="20" height="20" fill="black" />
+                  <circle cx="12" cy="10" r="5.5" fill="white" />
+                </mask>
+              </defs>
+              <circle cx="10" cy="10" r="7" fill="white" mask="url(#crescent-mask-header)" />
+            </svg>
+          </span>
           PM Assistant
         </Link>
         <nav className="flex items-center gap-4 text-sm font-medium text-slate-600">
