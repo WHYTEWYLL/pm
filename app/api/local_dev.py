@@ -27,7 +27,7 @@ async def setup_local_tenant(tenant_id: str = "local-dev-tenant"):
                 VALUES (%s, %s, %s, %s)
                 ON CONFLICT (id) DO NOTHING
                 """,
-                [tenant_id, "local@dev.com", "active", "pro"],
+                [tenant_id, "local@dev.com", "active", "scale"],
             )
         else:
             cursor = conn.cursor()
@@ -36,7 +36,7 @@ async def setup_local_tenant(tenant_id: str = "local-dev-tenant"):
                 INSERT OR IGNORE INTO tenants (id, email, subscription_status, subscription_tier)
                 VALUES (?, ?, ?, ?)
                 """,
-                [tenant_id, "local@dev.com", "active", "pro"],
+                [tenant_id, "local@dev.com", "active", "scale"],
             )
     
     # Store credentials from env vars (for local dev, store plaintext or use a simple encoding)

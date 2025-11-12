@@ -10,6 +10,7 @@ import {
 import axios from 'axios';
 import Link from 'next/link';
 import { loadSession, clearSession, AuthSession } from '../../lib/auth';
+import { getSubscriptionStatus, SubscriptionStatus } from '../../lib/subscription';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
 
@@ -92,6 +93,13 @@ export default function DashboardPage() {
       return response.data;
     },
     enabled: !!authHeaders,
+    retry: 1,
+  });
+
+  const subscriptionStatus = useQuery<SubscriptionStatus>({
+    queryKey: ['subscription'],
+    queryFn: getSubscriptionStatus,
+    enabled: !!session,
     retry: 1,
   });
 
@@ -248,6 +256,45 @@ export default function DashboardPage() {
         {statusMessage && (
           <div className="mb-6 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
             {statusMessage}
+          </div>
+        )}
+
+        {/* Subscription Status */}
+        {subscriptionStatus.data && (
+          <div className="mb-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900">
+                  Subscription Status
+                </h2>
+                <div className="mt-2 flex items-center gap-4 text-sm text-slate-600">
+                  <span>
+                    Tier: <span className="font-medium capitalize">{subscriptionStatus.data.tier}</span>
+                  </span>
+                  <span>
+                    Status: <span className="font-medium capitalize">{subscriptionStatus.data.status}</span>
+                  </span>
+                  {subscriptionStatus.data.is_trial_active && (
+                    <span className="text-brand-600 font-medium">
+                      {subscriptionStatus.data.trial_days_remaining} days left in trial
+                    </span>
+                  )}
+                </div>
+              </div>
+              {subscriptionStatus.data.is_trial_active && (
+                <Link
+                  href="/pricing"
+                  className="rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+                >
+                  Upgrade Now
+                </Link>
+              )}
+            </div>
+            {subscriptionStatus.data.status === 'expired' && (
+              <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                Your trial has expired. Subscribe to continue using the platform.
+              </div>
+            )}
           </div>
         )}
 

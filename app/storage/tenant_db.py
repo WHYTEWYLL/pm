@@ -95,6 +95,7 @@ class TenantDatabase:
                         subscription_status TEXT DEFAULT 'active',
                         stripe_customer_id TEXT,
                         stripe_subscription_id TEXT,
+                        trial_ends_at TIMESTAMP,
                         owner_user_id TEXT,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -184,6 +185,7 @@ class TenantDatabase:
                         subscription_status TEXT DEFAULT 'active',
                         stripe_customer_id TEXT,
                         stripe_subscription_id TEXT,
+                        trial_ends_at TEXT,
                         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
                         updated_at TEXT DEFAULT CURRENT_TIMESTAMP
                     )
@@ -258,6 +260,90 @@ class TenantDatabase:
                     cursor.execute("ALTER TABLE tenants ADD COLUMN owner_user_id TEXT")
                 except Exception:
                     pass  # Column already exists
+
+                # Add trial_ends_at to tenants if it doesn't exist (for SQLite migration)
+                try:
+                    cursor.execute("ALTER TABLE tenants ADD COLUMN trial_ends_at TEXT")
+                except Exception:
+                    pass  # Column already exists
+
+                # Handle existing tenants with trial status but no trial_ends_at (SQLite migration)
+                from datetime import datetime, timezone, timedelta
+
+                try:
+                    # Get existing trial tenants without trial_ends_at
+                    cursor.execute(
+                        """
+                        SELECT id, created_at FROM tenants 
+                        WHERE subscription_status = 'trial' 
+                        AND (trial_ends_at IS NULL OR trial_ends_at = '')
+                        """
+                    )
+                    trial_tenants = cursor.fetchall()
+
+                    for tenant_row in trial_tenants:
+                        tenant_id = (
+                            tenant_row[0]
+                            if isinstance(tenant_row, tuple)
+                            else tenant_row["id"]
+                        )
+                        created_at_str = (
+                            tenant_row[1]
+                            if isinstance(tenant_row, tuple)
+                            else tenant_row.get("created_at")
+                        )
+
+                        if created_at_str:
+                            try:
+                                # Parse created_at and set trial_ends_at to 7 days from creation
+                                if isinstance(created_at_str, str):
+                                    created_at = datetime.fromisoformat(
+                                        created_at_str.replace("Z", "+00:00")
+                                    )
+                                else:
+                                    created_at = datetime.fromisoformat(created_at_str)
+
+                                # If created more than 7 days ago, mark as expired
+                                if datetime.now(timezone.utc) - created_at > timedelta(
+                                    days=7
+                                ):
+                                    cursor.execute(
+                                        """
+                                        UPDATE tenants 
+                                        SET subscription_status = 'expired',
+                                            subscription_tier = 'free'
+                                        WHERE id = ?
+                                        """,
+                                        [tenant_id],
+                                    )
+                                else:
+                                    # Set trial_ends_at to 7 days from creation
+                                    trial_ends_at = created_at + timedelta(days=7)
+                                    cursor.execute(
+                                        """
+                                        UPDATE tenants 
+                                        SET trial_ends_at = ?
+                                        WHERE id = ?
+                                        """,
+                                        [trial_ends_at.isoformat(), tenant_id],
+                                    )
+                            except (ValueError, AttributeError, TypeError):
+                                # If we can't parse the date, mark as expired to be safe
+                                cursor.execute(
+                                    """
+                                    UPDATE tenants 
+                                    SET subscription_status = 'expired',
+                                        subscription_tier = 'free'
+                                    WHERE id = ?
+                                    """,
+                                    [tenant_id],
+                                )
+                except Exception as e:
+                    # Log but don't fail - migration should be resilient
+                    import logging
+
+                    logging.warning(f"Error during SQLite trial migration: {e}")
+                    pass
             conn.commit()
 
     def _ensure_tenant_filter(

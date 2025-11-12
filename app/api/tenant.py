@@ -72,32 +72,109 @@ def get_tenant_db(tenant_id: str = Depends(get_tenant_id)) -> TenantDatabase:
 
 
 def check_subscription(tenant_id: str) -> bool:
-    """Check if tenant has active subscription."""
+    """Check if tenant has active subscription or valid trial."""
+    from datetime import datetime, timezone
+    
     db = TenantDatabase(tenant_id=tenant_id)
     with db._conn() as conn:
         if db.use_postgres:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT subscription_status FROM tenants WHERE id = %s",
+                "SELECT subscription_status, trial_ends_at FROM tenants WHERE id = %s",
                 [tenant_id],
             )
             row = cursor.fetchone()
             if row:
                 status = row[0]
-                return status in ["active", "trial"]
+                trial_ends_at = row[1]
+                
+                # If status is active, they have a paid subscription
+                if status == "active":
+                    return True
+                
+                # If status is trial, check if trial hasn't expired
+                if status == "trial":
+                    if trial_ends_at:
+                        return datetime.now(timezone.utc) < trial_ends_at
+                    # If no trial_ends_at set, assume expired (shouldn't happen)
+                    return False
+                
+                return False
         else:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT subscription_status FROM tenants WHERE id = ?",
+                "SELECT subscription_status, trial_ends_at FROM tenants WHERE id = ?",
                 [tenant_id],
             )
             row = cursor.fetchone()
             if row:
                 status = row[0] if isinstance(row, tuple) else row["subscription_status"]
-                return status in ["active", "trial"]
+                trial_ends_at_str = row[1] if isinstance(row, tuple) else row.get("trial_ends_at")
+                
+                # If status is active, they have a paid subscription
+                if status == "active":
+                    return True
+                
+                # If status is trial, check if trial hasn't expired
+                if status == "trial":
+                    if trial_ends_at_str:
+                        try:
+                            trial_ends_at = datetime.fromisoformat(trial_ends_at_str.replace("Z", "+00:00"))
+                            return datetime.now(timezone.utc) < trial_ends_at
+                        except (ValueError, AttributeError):
+                            return False
+                    # If no trial_ends_at set, assume expired
+                    return False
+                
+                return False
     
-    # Default to True for development
-    return True
+    # Default to True for development (allows local dev to work without subscription)
+    if os.getenv("ENV") != "production":
+        return True
+    
+    # In production, if tenant not found, deny access
+    return False
+
+
+def get_subscription_tier(tenant_id: str) -> str:
+    """Get subscription tier for a tenant."""
+    db = TenantDatabase(tenant_id=tenant_id)
+    with db._conn() as conn:
+        if db.use_postgres:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT subscription_tier FROM tenants WHERE id = %s",
+                [tenant_id],
+            )
+            row = cursor.fetchone()
+            if row:
+                return row[0] or "free"
+        else:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT subscription_tier FROM tenants WHERE id = ?",
+                [tenant_id],
+            )
+            row = cursor.fetchone()
+            if row:
+                tier = row[0] if isinstance(row, tuple) else row.get("subscription_tier")
+                return tier or "free"
+    
+    return "free"
+
+
+def check_tier_access(tenant_id: str, required_tier: str = "scale") -> bool:
+    """
+    Check if tenant has access to a specific tier feature.
+    Tiers: free < starter < scale
+    """
+    tier = get_subscription_tier(tenant_id)
+    
+    tier_hierarchy = {"free": 0, "starter": 1, "scale": 2}
+    required_level = tier_hierarchy.get(required_tier.lower(), 0)
+    current_level = tier_hierarchy.get(tier.lower(), 0)
+    
+    return current_level >= required_level
 
 
 def create_jwt_token(tenant_id: str, email: str) -> str:

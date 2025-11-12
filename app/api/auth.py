@@ -189,16 +189,19 @@ async def register(user_data: UserRegistration):
     tenant_id = str(uuid.uuid4())
     tenant_email = user_data.email
     
+    # Set trial expiration to 7 days from now
+    trial_ends_at = datetime.now(timezone.utc) + timedelta(days=7)
+    
     # Insert tenant first (to satisfy FK) then user
     with db._conn() as conn:
         if db.use_postgres:
             cursor = conn.cursor()
             cursor.execute(
                 """
-                INSERT INTO tenants (id, email, subscription_status, subscription_tier, owner_user_id)
-                VALUES (%s, %s, %s, %s, %s)
+                INSERT INTO tenants (id, email, subscription_status, subscription_tier, trial_ends_at, owner_user_id)
+                VALUES (%s, %s, %s, %s, %s, %s)
                 """,
-                [tenant_id, tenant_email, "trial", "free", user_id],
+                [tenant_id, tenant_email, "trial", "free", trial_ends_at, user_id],
             )
 
             cursor.execute(
@@ -220,10 +223,10 @@ async def register(user_data: UserRegistration):
             cursor = conn.cursor()
             cursor.execute(
                 """
-                INSERT INTO tenants (id, email, subscription_status, subscription_tier, owner_user_id)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO tenants (id, email, subscription_status, subscription_tier, trial_ends_at, owner_user_id)
+                VALUES (?, ?, ?, ?, ?, ?)
                 """,
-                [tenant_id, tenant_email, "trial", "free", user_id],
+                [tenant_id, tenant_email, "trial", "free", trial_ends_at.isoformat(), user_id],
             )
 
             cursor.execute(

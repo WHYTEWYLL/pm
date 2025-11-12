@@ -8,7 +8,7 @@ from typing import Dict, Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 
-from .tenant import get_tenant_id, get_tenant_db, check_subscription
+from .tenant import get_tenant_id, get_tenant_db, check_subscription, check_tier_access
 from ..storage.tenant_db import TenantDatabase
 from ..storage.encryption import decrypt_token
 from ..ingestion.slack import SlackService
@@ -166,9 +166,15 @@ async def ingest_github(
     background_tasks: BackgroundTasks,
     tenant_id: str = Depends(get_tenant_id),
 ):
-    """Trigger GitHub ingestion for tenant."""
+    """Trigger GitHub ingestion for tenant. Requires Scale tier."""
     if not check_subscription(tenant_id):
         raise HTTPException(status_code=403, detail="Subscription required")
+
+    if not check_tier_access(tenant_id, required_tier="scale"):
+        raise HTTPException(
+            status_code=403,
+            detail="GitHub ingestion requires Scale tier subscription. Upgrade to access this feature.",
+        )
 
     db = get_tenant_db(tenant_id)
     creds = db.get_oauth_credentials("github")
