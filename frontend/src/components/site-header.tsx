@@ -45,22 +45,10 @@ export function SiteHeader() {
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
         <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
           <span className="relative inline-flex h-8 w-8 items-center justify-center">
-            {/* Outer dark blue ring and lighter blue interior */}
-            <span className="absolute inset-0 rounded-full border-2 border-blue-800 bg-blue-400"></span>
-            {/* White crescent on the left side - styled like a "C" */}
-            <svg
-              className="absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2"
-              viewBox="0 0 20 20"
-              fill="none"
-            >
-              <defs>
-                <mask id="crescent-mask-header">
-                  <rect width="20" height="20" fill="black" />
-                  <circle cx="13.5" cy="10" r="3.5" fill="white" />
-                </mask>
-              </defs>
-              <circle cx="10" cy="10" r="9" fill="white" mask="url(#crescent-mask-header)" />
-            </svg>
+            {/* Blue circle - base layer */}
+            <span className="absolute inset-0 rounded-full bg-blue-600"></span>
+            {/* White circle on top - offset to the right to create crescent moon effect on the left */}
+            <span className="absolute left-2 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-white"></span>
           </span>
           PM Assistant
         </Link>
