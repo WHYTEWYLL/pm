@@ -56,7 +56,7 @@ STRIPE_SCALE_PRICE_IDS=<your_scale_price_id>
 STRIPE_WEBHOOK_SECRET=whsec_...
 
 # App URL for redirects
-APP_URL=http://localhost:3000  # or your production URL
+APP_URL=http://localhost:3000  # or your production URL (e.g., https://www.corta.ai)
 ```
 
 ### Frontend (.env.local)
