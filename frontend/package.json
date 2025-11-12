@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "prebuild": "rm -rf .next .next/cache ~/.cache/next-swc || true",
+    "build": "NEXT_TELEMETRY_DISABLED=1 next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "next telemetry disable || true"
   },
   "dependencies": {
     "next": "14.0.0",
@@ -19,6 +21,10 @@
     "autoprefixer": "^10.4.16",
     "postcss": "^8.4.31",
     "@stripe/stripe-js": "^2.4.0"
+  },
+  "optionalDependencies": {
+    "@next/swc-linux-x64-gnu": "14.0.0",
+    "@next/swc-linux-x64-musl": "14.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
