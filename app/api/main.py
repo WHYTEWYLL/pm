@@ -6,8 +6,8 @@ import os
 from . import oauth, tenant, workflows, stripe, local_dev, auth
 
 app = FastAPI(
-    title="CORTA API",
-    description="AI-powered project management SaaS Platform",
+    title="PM Assistant API",
+    description="AI-powered PM Assistant SaaS Platform",
     version="1.0.0",
 )
 
@@ -51,7 +51,7 @@ if os.getenv("ENV") != "production":
 
 @app.get("/")
 async def root():
-    return {"message": "CORTA API", "version": "1.0.0"}
+    return {"message": "PM Assistant API", "version": "1.0.0"}
 
 
 @app.get("/health")

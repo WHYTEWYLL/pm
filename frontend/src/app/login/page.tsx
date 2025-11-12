@@ -47,7 +47,7 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-[70vh] items-center justify-center bg-slate-50 px-6 py-16">
       <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-lg shadow-slate-200/50">
-        <h1 className="text-2xl font-semibold text-slate-900">Log in to CORTA</h1>
+        <h1 className="text-2xl font-semibold text-slate-900">Log in to PM Assistant</h1>
         <p className="mt-2 text-sm text-slate-500">
           Manage your tenants, integrations, and workflows.
         </p>
