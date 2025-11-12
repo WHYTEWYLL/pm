@@ -173,6 +173,14 @@ class TenantDatabase:
                     )
                 except Exception:
                     pass  # Column already exists or not supported
+                
+                # Add trial_ends_at to tenants if it doesn't exist (for PostgreSQL migration)
+                try:
+                    cursor.execute(
+                        "ALTER TABLE tenants ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMP"
+                    )
+                except Exception:
+                    pass  # Column already exists or not supported
             else:
                 # SQLite schema
                 cursor = conn.cursor()
