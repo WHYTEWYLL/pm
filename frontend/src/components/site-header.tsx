@@ -50,7 +50,7 @@ export function SiteHeader() {
             {/* White circle on top - offset to the right to create crescent moon effect on the left */}
             <span className="absolute left-2 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-white"></span>
           </span>
-          PM Assistant
+          Corta.ai
         </Link>
         <nav className="flex items-center gap-4 text-sm font-medium text-slate-600">
           <Link className={linkClass("/#features")} href="/#features">

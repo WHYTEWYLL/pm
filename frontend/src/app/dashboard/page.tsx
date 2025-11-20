@@ -367,13 +367,14 @@ export default function DashboardPage() {
             </span>
           </div>
           <div className="mt-6 grid gap-4 lg:grid-cols-2">
-            {[
+            {([
               {
                 name: 'Daily standup',
                 description:
                   'Generates a daily briefing of what shipped, ongoing work, and blockers across GitHub, Slack, and Linear.',
                 endpoint: '/api/workflows/standup',
                 actionLabel: 'View summary',
+                link: '/standup',
               },
               {
                 name: 'Process inbox',
@@ -396,7 +397,13 @@ export default function DashboardPage() {
                 endpoint: null,
                 actionLabel: 'Schedule soon',
               },
-            ].map((workflow) => (
+            ] as Array<{
+              name: string;
+              description: string;
+              endpoint: string | null;
+              actionLabel: string;
+              link?: string;
+            }>).map((workflow) => (
               <div
                 key={workflow.name}
                 className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-100"
@@ -420,7 +427,14 @@ export default function DashboardPage() {
                   <span>Background tasks</span>
                 </div>
                 <div className="mt-6">
-                  {workflow.endpoint ? (
+                  {workflow.link ? (
+                    <Link
+                      href={workflow.link}
+                      className="inline-block rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+                    >
+                      {workflow.actionLabel}
+                    </Link>
+                  ) : workflow.endpoint ? (
                     <button
                       onClick={async () => {
                         try {

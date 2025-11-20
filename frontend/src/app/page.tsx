@@ -3,191 +3,239 @@ import Link from "next/link";
 export default function LandingPage() {
   return (
     <div className="relative overflow-hidden">
-      {/* Hero */}
+      {/* Hero Section */}
       <section className="relative">
         <div className="absolute inset-0 -z-10 bg-gradient-to-br from-brand-50 via-white to-slate-100" />
-        <div className="mx-auto flex max-w-6xl flex-col-reverse items-center gap-16 px-6 py-20 lg:flex-row lg:py-28">
-          <div className="max-w-2xl text-center lg:text-left">
-            <span className="inline-flex items-center rounded-full border border-brand-100 bg-brand-50 px-3 py-1 text-sm font-medium text-brand-700">
-              AI copilots for engineering teams
-            </span>
-            <h1 className="mt-6 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
-              Orchestrate your PM workflows with{" "}
-              <span className="text-brand-600">real-time AI assistance</span>
+        <div className="mx-auto max-w-6xl px-6 py-20 lg:py-28">
+          <div className="text-center">
+            <h1 className="text-5xl font-bold tracking-tight text-slate-900 sm:text-6xl lg:text-7xl">
+              Corta.ai
             </h1>
-            <p className="mt-6 text-lg leading-8 text-slate-600">
-              PM Assistant ingests Slack conversations, GitHub activity, and
-              Linear tickets every day. The result: daily standups, automated
-              ticket updates, and weekly summaries delivered without manual
-              chasing.
+            <p className="mt-6 text-3xl font-semibold text-slate-700 sm:text-4xl lg:text-5xl">
+              Your Automatic Project Manager
             </p>
-            <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
+            <p className="mt-6 text-xl text-slate-600 sm:text-2xl">
+              Alignment for the team. Clarity for stakeholders.
+            </p>
+            <p className="mt-4 text-lg font-medium text-brand-600">
+              100% automated.
+            </p>
+            <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <Link
                 href="/register"
-                className="w-full rounded-md bg-brand-600 px-6 py-3 text-center text-base font-semibold text-white shadow-lg shadow-brand-200 transition hover:bg-brand-700 sm:w-auto"
+                className="w-full rounded-md bg-brand-600 px-8 py-4 text-center text-base font-semibold text-white shadow-lg shadow-brand-200 transition hover:bg-brand-700 sm:w-auto"
               >
-                Start free trial
+                For Teams
               </Link>
               <Link
-                href="/login"
-                className="w-full rounded-md border border-slate-200 px-6 py-3 text-center text-base font-semibold text-slate-700 transition hover:border-brand-300 hover:text-brand-600 sm:w-auto"
+                href="/register"
+                className="w-full rounded-md border-2 border-brand-600 px-8 py-4 text-center text-base font-semibold text-brand-600 transition hover:bg-brand-50 sm:w-auto"
               >
-                Log in to dashboard
+                For Stakeholders
               </Link>
             </div>
-            <div className="mt-6 flex items-center justify-center gap-6 text-sm text-slate-500 lg:justify-start">
-              <div>
-                <span className="font-semibold text-slate-700">24h</span> data refresh
-              </div>
-              <div>
-                <span className="font-semibold text-slate-700">3</span> integrations today
-              </div>
-              <div>
-                <span className="font-semibold text-slate-700">100%</span> audit trail
-              </div>
-            </div>
-          </div>
-          <div className="relative w-full max-w-xl">
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl shadow-brand-100/50">
-              <div className="mb-4 flex items-center justify-between border-b border-slate-200 pb-4">
-                <div>
-                  <p className="text-sm font-medium text-brand-600">Daily Standup</p>
-                  <p className="text-xs text-slate-500">Generated 8:45 AM • Slack</p>
-                </div>
-                <span className="rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-600">
-                  Today
-                </span>
-              </div>
-              <ul className="space-y-4 text-sm text-slate-600">
-                <li className="rounded-lg border border-slate-100 bg-slate-50/80 p-3">
-                  Ship checkout telemetry fix • owner <span className="font-semibold">Sofia</span>
-                  <div className="mt-1 text-xs text-slate-500">
-                    Detected from GitHub PR #421 and Slack thread in #reliability
-                  </div>
-                </li>
-                <li className="rounded-lg border border-slate-100 bg-slate-50/80 p-3">
-                  Prepare RFC for async notifications • owner{" "}
-                  <span className="font-semibold">Anish</span>
-                  <div className="mt-1 text-xs text-slate-500">
-                    Linear issue TSK-234 linked to product channel discussion
-                  </div>
-                </li>
-                <li className="rounded-lg border border-slate-100 bg-slate-50/80 p-3">
-                  Close stale tickets in Triage column • owner{" "}
-                  <span className="font-semibold">Maria</span>
-                  <div className="mt-1 text-xs text-slate-500">
-                    3 issues identified with no activity in 7 days
-                  </div>
-                </li>
-              </ul>
-              <div className="mt-6 rounded-md bg-brand-50 px-4 py-3 text-xs text-brand-700">
-                All actions are logged in tenant-specific audit trail with AI reasoning and confidence
-              </div>
-            </div>
           </div>
         </div>
       </section>
 
-      {/* Features */}
-      <section id="features" className="border-t border-slate-200 bg-white py-20">
-        <div className="mx-auto max-w-6xl px-6">
-          <h2 className="text-center text-sm font-semibold uppercase tracking-wide text-brand-600">
-            Built for Staff+ PMs and Engineering Leaders
-          </h2>
-          <p className="mt-4 text-center text-3xl font-semibold text-slate-900">
-            A shared brain that turns conversations into action
+      {/* Key Message Banner */}
+      <section className="border-y border-slate-200 bg-slate-900 py-8">
+        <div className="mx-auto max-w-6xl px-6 text-center">
+          <p className="text-lg font-medium text-white sm:text-xl">
+            <span className="font-semibold">Corta is not a chatbot.</span> Cut the noise you and with you.
           </p>
-          <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              {
-                title: "Daily standup briefs",
-                description:
-                  "Summaries of what each engineer shipped, plans, and blockers pulled from GitHub, Slack, and Linear.",
-              },
-              {
-                title: "Ticket hygiene, automated",
-                description:
-                  "Move Linear issues across states, close duplicates, and open follow-ups based on AI tagging of conversations.",
-              },
-              {
-                title: "Friday wins digest",
-                description:
-                  "Share a digest of the week's top accomplishments with leadership, generated automatically every Friday morning.",
-              },
-              {
-                title: "Decision logging",
-                description:
-                  "Every AI action is recorded with reasoning, confidence, and source messages for governance and trust.",
-              },
-              {
-                title: "Multi-tenant by design",
-                description:
-                  "Onboard multiple orgs, each with isolated databases, encrypted tokens, and per-tenant configuration.",
-              },
-              {
-                title: "Zapier-grade integrations",
-                description:
-                  "OAuth flows for Slack, Linear, and GitHub so your teams stay secure and in control of access.",
-              },
-            ].map((feature) => (
-              <div
-                key={feature.title}
-                className="rounded-xl border border-slate-200 bg-slate-50/60 p-6 shadow-sm shadow-slate-100"
-              >
-                <h3 className="text-lg font-semibold text-slate-900">{feature.title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-slate-600">
-                  {feature.description}
+          <p className="mt-2 text-lg text-slate-300 sm:text-xl">
+            Corta is the operating system of product execution.
+          </p>
+          <p className="mt-2 text-sm text-slate-400">
+            It works continuously, automatically, and without prompting.
+          </p>
+        </div>
+      </section>
+
+      {/* Split Section: Team Mode & Stakeholder Mode */}
+      <section className="bg-white py-20">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="grid gap-8 lg:grid-cols-2">
+            {/* Team Mode */}
+            <div className="rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-white p-8 shadow-lg">
+              <div className="mb-6">
+                <h2 className="text-3xl font-bold text-slate-900">Team Mode</h2>
+                <p className="mt-2 text-lg text-slate-600">
+                  Keeps everyone aligned
                 </p>
               </div>
-            ))}
+              <ul className="space-y-4 text-slate-700">
+                <li className="flex items-start gap-3">
+                  <svg
+                    className="mt-1 h-5 w-5 flex-shrink-0 text-brand-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  <span>Tracks progress</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <svg
+                    className="mt-1 h-5 w-5 flex-shrink-0 text-brand-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  <span>Cleans up tickets</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <svg
+                    className="mt-1 h-5 w-5 flex-shrink-0 text-brand-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  <span>Ensures no one is blocked</span>
+                </li>
+              </ul>
+              <div className="mt-8">
+                <Link
+                  href="/register"
+                  className="inline-block rounded-md bg-brand-600 px-6 py-3 text-base font-semibold text-white hover:bg-brand-700"
+                >
+                  Learn More
+                </Link>
+              </div>
+            </div>
+
+            {/* Stakeholder Mode */}
+            <div className="rounded-2xl border-2 border-slate-200 bg-gradient-to-br from-slate-50 to-white p-8 shadow-lg">
+              <div className="mb-6">
+                <h2 className="text-3xl font-bold text-slate-900">Stakeholder Mode</h2>
+                <p className="mt-2 text-lg text-slate-600">
+                  Weekly updates
+                </p>
+              </div>
+              <ul className="space-y-4 text-slate-700">
+                <li className="flex items-start gap-3">
+                  <svg
+                    className="mt-1 h-5 w-5 flex-shrink-0 text-slate-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  <span>Executive summaries</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <svg
+                    className="mt-1 h-5 w-5 flex-shrink-0 text-slate-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  <span>Context-rich progress reports</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <svg
+                    className="mt-1 h-5 w-5 flex-shrink-0 text-slate-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  <span>Audience-aware communication</span>
+                </li>
+              </ul>
+              <div className="mt-8">
+                <Link
+                  href="/register"
+                  className="inline-block rounded-md border-2 border-slate-300 bg-white px-6 py-3 text-base font-semibold text-slate-700 hover:border-slate-400 hover:bg-slate-50"
+                >
+                  Learn More
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Workflows */}
-      <section id="workflows" className="bg-slate-900 py-20">
-        <div className="mx-auto max-w-6xl px-6 text-slate-100">
-          <div className="flex flex-col gap-12 lg:flex-row lg:items-start">
-            <div className="w-full lg:w-1/3">
-              <h2 className="text-3xl font-semibold">
-                Automate the boring, stay focused on outcomes
-              </h2>
-              <p className="mt-4 text-slate-300">
-                Activate the workflows you need, customize schedules, and trust the AI to do the heavy
-                lifting with clear audit logs.
+      {/* How Corta Works */}
+      <section className="bg-slate-50 py-20">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="text-center">
+            <h2 className="text-4xl font-bold text-slate-900 sm:text-5xl">
+              How Corta Works
+            </h2>
+            <p className="mt-4 text-xl font-medium text-brand-600">
+              The Magic
+            </p>
+            <p className="mt-6 text-lg text-slate-600 sm:text-xl">
+              It observes. It organizes. It communicates. Automatically.
+            </p>
+            <p className="mt-4 text-lg font-semibold text-slate-700">
+              No prompts. No micromanagement.
+            </p>
+          </div>
+
+          <div className="mt-12 rounded-2xl border border-slate-200 bg-white p-8 shadow-lg lg:p-12">
+            <div className="space-y-6 text-center">
+              <p className="text-lg text-slate-700">
+                Corta plugs into the tools your team already uses
+              </p>
+              <p className="text-lg text-slate-700">
+                and behaves like the PM that never forgets anything.
+              </p>
+              <p className="text-xl font-semibold text-slate-900">
+                Let everyone's work speaks for themselves.
               </p>
             </div>
-            <div className="grid w-full gap-6 lg:w-2/3">
-              {[
-                {
-                  name: "Standup sync",
-                  description:
-                    "Digest daily commits, PR comments, and Slack threads into actionable to-do lists.",
-                },
-                {
-                  name: "Message → Ticket",
-                  description:
-                    "Turn noisy discussions into Linear issues with owner assignment, due dates, and context automatically filled in.",
-                },
-                {
-                  name: "Weekly recap",
-                  description:
-                    "Friday morning summary of shipped work, resolved incidents, and high-signal conversations.",
-                },
-                {
-                  name: "Health guardrails",
-                  description:
-                    "Alert when tickets stall, conversations go unanswered, or PRs lack owner follow-up.",
-                },
-              ].map((workflow) => (
-                <div key={workflow.name} className="rounded-lg border border-white/10 bg-white/5 p-5">
-                  <h3 className="text-xl font-semibold text-white">{workflow.name}</h3>
-                  <p className="mt-2 text-sm text-slate-200">{workflow.description}</p>
-                  <div className="mt-4 flex items-center gap-3 text-xs text-slate-400">
-                    <span className="rounded-full bg-white/10 px-3 py-1">Uses AI</span>
-                    <span className="rounded-full bg-white/10 px-3 py-1">Full audit log</span>
-                    <span className="rounded-full bg-white/10 px-3 py-1">Tenant scoped</span>
-                  </div>
+
+            {/* Integration Icons */}
+            <div className="mt-12 flex flex-wrap items-center justify-center gap-8">
+              {["Slack", "Linear", "GitHub"].map((tool) => (
+                <div
+                  key={tool}
+                  className="flex flex-col items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-6 py-4"
+                >
+                  <div className="h-12 w-12 rounded-full bg-brand-100"></div>
+                  <span className="text-sm font-medium text-slate-700">{tool}</span>
                 </div>
               ))}
             </div>
@@ -195,33 +243,78 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="bg-white py-16">
-        <div className="mx-auto max-w-4xl rounded-2xl border border-brand-100 bg-brand-50 px-10 py-12 text-center shadow-lg shadow-brand-200/40">
-          <h2 className="text-3xl font-semibold text-slate-900">
-            Ready to launch an AI-powered PM assistant for your org?
+      {/* Testimonials */}
+      <section className="bg-white py-20">
+        <div className="mx-auto max-w-6xl px-6">
+          <h2 className="mb-12 text-center text-3xl font-bold text-slate-900">
+            What Teams Are Saying
           </h2>
-          <p className="mt-4 text-lg text-slate-600">
-            Connect Slack, Linear, and GitHub with secure OAuth, then let the assistant run daily
-            workflows while keeping humans in the loop.
+          <div className="grid gap-6 md:grid-cols-3">
+            {[
+              {
+                quote: "Corta removed 60% of my PM overhead.",
+                author: "Project Manager",
+              },
+              {
+                quote:
+                  "It keeps leadership synced without me writing a single update.",
+                author: "Engineering Lead",
+              },
+              {
+                quote:
+                  "Our engineers finally stay in sync without me manual pinging.",
+                author: "Tech Lead",
+              },
+            ].map((testimonial, idx) => (
+              <div
+                key={idx}
+                className="rounded-xl border border-slate-200 bg-slate-50 p-6 shadow-sm"
+              >
+                <p className="text-lg font-medium text-slate-900">
+                  "{testimonial.quote}"
+                </p>
+                <p className="mt-4 text-sm text-slate-600">— {testimonial.author}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Call to Action */}
+      <section className="bg-gradient-to-br from-brand-600 to-brand-700 py-20">
+        <div className="mx-auto max-w-4xl px-6 text-center">
+          <h2 className="text-4xl font-bold text-white sm:text-5xl">
+            Get early access
+          </h2>
+          <p className="mt-6 text-xl text-brand-100">
+            Corta handles the work behind the work.
           </p>
-          <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+          <div className="mt-10">
             <Link
               href="/register"
-              className="w-full rounded-md bg-brand-600 px-6 py-3 text-center text-base font-semibold text-white shadow-lg hover:bg-brand-700 sm:w-auto"
+              className="inline-block rounded-md bg-white px-8 py-4 text-base font-semibold text-brand-600 shadow-lg transition hover:bg-slate-50"
             >
-              Create your tenant
-            </Link>
-            <Link
-              href="/docs"
-              className="w-full rounded-md border border-brand-200 px-6 py-3 text-center text-base font-semibold text-brand-600 hover:border-brand-300 sm:w-auto"
-            >
-              Explore the docs
+              Start Free Trial
             </Link>
           </div>
+          <p className="mt-6 text-sm text-brand-200">
+            No credit card required • 7-day free trial
+          </p>
+        </div>
+      </section>
+
+      {/* Footer Message */}
+      <section className="border-t border-slate-200 bg-slate-900 py-8">
+        <div className="mx-auto max-w-6xl px-6 text-center">
+          <p className="text-sm text-slate-400">
+            <span className="font-semibold text-white">Corta is not a chatbot.</span>{" "}
+            Cut the noise you and with you.
+          </p>
+          <p className="mt-2 text-sm text-slate-500">
+            Corta is the operating system of product execution.
+          </p>
         </div>
       </section>
     </div>
   );
 }
-

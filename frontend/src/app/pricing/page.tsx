@@ -5,8 +5,11 @@ import { useRouter } from "next/navigation";
 import { loadSession } from "../../lib/auth";
 import { createCheckoutSession } from "../../lib/subscription";
 
-// These should be set in your Stripe dashboard and passed via environment variables
-// For now, you'll need to replace these with your actual Stripe Price IDs
+// Get Stripe Price IDs from environment variables
+// These must be set at build time (NEXT_PUBLIC_* variables are embedded during build)
+// If you see an error, make sure to:
+// 1. Set NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID and NEXT_PUBLIC_STRIPE_SCALE_PRICE_ID in Railway
+// 2. Redeploy the frontend service to rebuild with the new environment variables
 const STARTER_PRICE_ID = process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID || "";
 const SCALE_PRICE_ID = process.env.NEXT_PUBLIC_STRIPE_SCALE_PRICE_ID || "";
 
@@ -14,6 +17,14 @@ export default function PricingPage() {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Debug: Log environment variables (only in development)
+  if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
+    console.log("Stripe Price IDs:", {
+      starter: STARTER_PRICE_ID || "NOT SET",
+      scale: SCALE_PRICE_ID || "NOT SET",
+    });
+  }
 
   const handleSubscribe = async (tier: "starter" | "scale") => {
     const session = loadSession();
@@ -26,7 +37,9 @@ export default function PricingPage() {
     
     if (!priceId) {
       setError(
-        "Stripe price ID not configured. Please set NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID and NEXT_PUBLIC_STRIPE_SCALE_PRICE_ID environment variables."
+        `Stripe price ID not configured for ${tier} tier. ` +
+        "Please set NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID and NEXT_PUBLIC_STRIPE_SCALE_PRICE_ID environment variables in Railway, " +
+        "then redeploy the frontend service to rebuild with the new variables."
       );
       return;
     }

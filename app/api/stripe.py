@@ -10,10 +10,16 @@ logger = logging.getLogger(__name__)
 try:
     import stripe
 
-    stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
-    STRIPE_AVAILABLE = True
+    stripe_secret_key = os.getenv("STRIPE_SECRET_KEY")
+    if stripe_secret_key:
+        stripe.api_key = stripe_secret_key
+        STRIPE_AVAILABLE = True
+    else:
+        STRIPE_AVAILABLE = False
+        logger.warning("STRIPE_SECRET_KEY not set - Stripe features disabled")
 except ImportError:
     STRIPE_AVAILABLE = False
+    logger.warning("stripe package not installed - Stripe features disabled")
 
 from .tenant import get_tenant_id, get_tenant_db, check_subscription
 from datetime import datetime, timezone
