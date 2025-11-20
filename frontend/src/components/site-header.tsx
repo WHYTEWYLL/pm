@@ -120,9 +120,6 @@ export function SiteHeader() {
           <Link className={linkClass("/pricing")} href="/pricing">
             Pricing
           </Link>
-          <Link className={linkClass("/docs")} href="/docs">
-            Docs
-          </Link>
           {isAuthenticated ? (
             <>
               <Link
