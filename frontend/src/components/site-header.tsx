@@ -75,50 +75,61 @@ export function SiteHeader() {
 
   return (
     <header className="border-b border-slate-200 bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/80">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
-        <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
-          <span className="relative inline-flex h-8 w-8 items-center justify-center">
-            {/* Blue circle - base layer */}
-            <span className="absolute inset-0 rounded-full bg-blue-600"></span>
-            {/* White circle on top - offset to the right to create crescent moon effect on the left */}
-            <span className="absolute left-2 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-white"></span>
-          </span>
-          Corta.ai
-        </Link>
-        <nav className="flex items-center gap-4 text-sm font-medium text-slate-600">
-          <Link className={linkClass("/#features")} href="/#features">
-            Features
+      <div className="mx-auto flex w-full max-w-6xl items-center px-6 py-4 relative">
+        {/* Left side: Logo + Nav */}
+        <div className="flex items-center gap-4">
+          <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
+            <span className="relative inline-flex h-8 w-8 items-center justify-center">
+              {/* Blue circle - base layer */}
+              <span className="absolute inset-0 rounded-full bg-blue-600"></span>
+              {/* White circle on top - offset to the right to create crescent moon effect on the left */}
+              <span className="absolute left-2 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-white"></span>
+            </span>
+            Corta.ai
           </Link>
-          <Link className={linkClass("/#workflows")} href="/#workflows">
-            Workflows
-          </Link>
-          {/* Audience Toggle - only show on home page, centered */}
-          {pathname === "/" && (
-            <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-1">
-              <button
-                onClick={() => handleAudienceToggle("devs")}
-                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition whitespace-nowrap ${
-                  audience === "devs"
-                    ? "bg-blue-600 text-white"
-                    : "text-slate-600 hover:bg-slate-50"
-                }`}
-              >
-                Building
-              </button>
-              <button
-                onClick={() => handleAudienceToggle("stakeholders")}
-                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition whitespace-nowrap ${
-                  audience === "stakeholders"
-                    ? "bg-blue-600 text-white"
-                    : "text-slate-600 hover:bg-slate-50"
-                }`}
-              >
-                What did you get done last week?
-              </button>
-            </div>
-          )}
+          <nav className="flex items-center gap-4 text-sm font-medium text-slate-600 ml-4">
+            <Link className={linkClass("/#features")} href="/#features">
+              Features
+            </Link>
+            <Link className={linkClass("/#workflows")} href="/#workflows">
+              Workflows
+            </Link>
+          </nav>
+        </div>
+
+        {/* Center: Toggle - absolutely centered */}
+        {pathname === "/" && (
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-1">
+            <button
+              onClick={() => handleAudienceToggle("devs")}
+              className={`rounded-md px-3 py-1.5 text-xs font-semibold transition whitespace-nowrap ${
+                audience === "devs"
+                  ? "bg-blue-600 text-white"
+                  : "text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              Build
+            </button>
+            <button
+              onClick={() => handleAudienceToggle("stakeholders")}
+              className={`rounded-md px-3 py-1.5 text-xs font-semibold transition whitespace-nowrap ${
+                audience === "stakeholders"
+                  ? "bg-blue-600 text-white"
+                  : "text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              Make decisions
+            </button>
+          </div>
+        )}
+
+        {/* Right side: Nav + Auth */}
+        <div className="flex items-center gap-4 text-sm font-medium text-slate-600 ml-auto">
           <Link className={linkClass("/pricing")} href="/pricing">
             Pricing
+          </Link>
+          <Link className={linkClass("/docs")} href="/docs">
+            Docs
           </Link>
           {isAuthenticated ? (
             <>
@@ -151,7 +162,7 @@ export function SiteHeader() {
               </Link>
             </>
           )}
-        </nav>
+        </div>
       </div>
     </header>
   );
