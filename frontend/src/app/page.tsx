@@ -74,7 +74,7 @@ export default function LandingPage() {
                 }}
                 className="w-full sm:w-auto px-10 py-3.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200 rounded-sm"
               >
-                For Teams
+                Busy Building
               </a>
               <a
                 href="#stakeholders-section"
@@ -85,7 +85,7 @@ export default function LandingPage() {
                 }}
                 className="w-full sm:w-auto px-10 py-3.5 text-sm font-medium text-slate-700 border border-slate-300 hover:border-slate-400 hover:bg-slate-50 transition-colors duration-200 rounded-sm"
               >
-                For Stakeholders
+                What did you get done last week?
               </a>
             </div>
           </div>

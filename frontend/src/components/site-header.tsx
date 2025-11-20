@@ -86,37 +86,37 @@ export function SiteHeader() {
           Corta.ai
         </Link>
         <nav className="flex items-center gap-4 text-sm font-medium text-slate-600">
-          {/* Audience Toggle - only show on home page */}
-          {pathname === "/" && (
-            <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-1">
-              <button
-                onClick={() => handleAudienceToggle("devs")}
-                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${
-                  audience === "devs"
-                    ? "bg-brand-600 text-white"
-                    : "text-slate-600 hover:bg-slate-50"
-                }`}
-              >
-                Devs
-              </button>
-              <button
-                onClick={() => handleAudienceToggle("stakeholders")}
-                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${
-                  audience === "stakeholders"
-                    ? "bg-brand-600 text-white"
-                    : "text-slate-600 hover:bg-slate-50"
-                }`}
-              >
-                Stakeholders
-              </button>
-            </div>
-          )}
           <Link className={linkClass("/#features")} href="/#features">
             Features
           </Link>
           <Link className={linkClass("/#workflows")} href="/#workflows">
             Workflows
           </Link>
+          {/* Audience Toggle - only show on home page, centered */}
+          {pathname === "/" && (
+            <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-1">
+              <button
+                onClick={() => handleAudienceToggle("devs")}
+                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition whitespace-nowrap ${
+                  audience === "devs"
+                    ? "bg-blue-600 text-white"
+                    : "text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                Building
+              </button>
+              <button
+                onClick={() => handleAudienceToggle("stakeholders")}
+                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition whitespace-nowrap ${
+                  audience === "stakeholders"
+                    ? "bg-blue-600 text-white"
+                    : "text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                What did you get done last week?
+              </button>
+            </div>
+          )}
           <Link className={linkClass("/pricing")} href="/pricing">
             Pricing
           </Link>
