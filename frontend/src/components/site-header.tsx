@@ -5,9 +5,12 @@ import { useEffect, useState } from "react";
 import { loadSession, clearSession } from "../lib/auth";
 import { useRouter, usePathname } from "next/navigation";
 
+type AudienceType = "devs" | "stakeholders";
+
 export function SiteHeader() {
   const [isMounted, setIsMounted] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [audience, setAudience] = useState<AudienceType>("devs");
   const router = useRouter();
   const pathname = usePathname();
 
@@ -24,6 +27,36 @@ export function SiteHeader() {
     window.addEventListener("storage", handleStorage);
     return () => window.removeEventListener("storage", handleStorage);
   }, []);
+
+  const handleAudienceToggle = (newAudience: AudienceType) => {
+    setAudience(newAudience);
+    const sectionId = newAudience === "devs" ? "devs-section" : "stakeholders-section";
+    
+    if (pathname === "/") {
+      // Scroll to the appropriate section
+      setTimeout(() => {
+        const element = document.getElementById(sectionId);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 50);
+    } else {
+      // If not on home page, navigate to home with hash
+      router.push(`/#${sectionId}`);
+    }
+  };
+
+  // Sync with URL hash on mount
+  useEffect(() => {
+    if (pathname === "/") {
+      const hash = window.location.hash;
+      if (hash === "#stakeholders-section") {
+        setAudience("stakeholders");
+      } else if (hash === "#devs-section") {
+        setAudience("devs");
+      }
+    }
+  }, [pathname]);
 
   const handleLogout = () => {
     clearSession();
@@ -53,6 +86,31 @@ export function SiteHeader() {
           Corta.ai
         </Link>
         <nav className="flex items-center gap-4 text-sm font-medium text-slate-600">
+          {/* Audience Toggle - only show on home page */}
+          {pathname === "/" && (
+            <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-1">
+              <button
+                onClick={() => handleAudienceToggle("devs")}
+                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+                  audience === "devs"
+                    ? "bg-brand-600 text-white"
+                    : "text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                Devs
+              </button>
+              <button
+                onClick={() => handleAudienceToggle("stakeholders")}
+                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+                  audience === "stakeholders"
+                    ? "bg-brand-600 text-white"
+                    : "text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                Stakeholders
+              </button>
+            </div>
+          )}
           <Link className={linkClass("/#features")} href="/#features">
             Features
           </Link>
