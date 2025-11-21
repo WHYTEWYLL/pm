@@ -52,17 +52,14 @@ export default function LandingPage() {
         </div>
         <div className="mx-auto max-w-4xl px-6 py-32 lg:py-40">
           <div className="text-center">
-            <h1 className="text-6xl font-light tracking-tight text-slate-900 sm:text-7xl lg:text-8xl mb-6">
-              Corta.ai
+            <h1 className="text-6xl font-light tracking-tight text-slate-900 sm:text-7xl lg:text-8xl mb-8">
+              Developers
             </h1>
-            <p className="mt-8 text-2xl font-light text-slate-600 sm:text-3xl lg:text-4xl mb-4">
-              Your Automatic Project Manager
+            <p className="mt-8 text-2xl font-light text-slate-600 sm:text-3xl lg:text-4xl mb-8 max-w-3xl mx-auto leading-relaxed">
+              Let your work speak for itself. Don't get gotcha by politics, status updates, or explaining what you're working on. 
             </p>
             <p className="mt-6 text-lg text-slate-500 sm:text-xl max-w-2xl mx-auto leading-relaxed">
-              Alignment for the team. Clarity for stakeholders.
-            </p>
-            <p className="mt-8 text-base font-medium text-blue-600 tracking-wide uppercase text-xs">
-              100% automated
+              I'll watch your Slack, Linear, and GitHub activity and automatically sync everything. I'll track progress, clean up tickets, and unblock your team—so you can focus on building. I'll help 🔥
             </p>
             <div className="mt-16 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
               <a
@@ -74,7 +71,7 @@ export default function LandingPage() {
                 }}
                 className="w-full sm:w-auto px-10 py-3.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200 rounded-sm"
               >
-                Busy Building
+                Build
               </a>
               <a
                 href="#stakeholders-section"
@@ -83,9 +80,9 @@ export default function LandingPage() {
                   setAudience("stakeholders");
                   document.getElementById("stakeholders-section")?.scrollIntoView({ behavior: "smooth" });
                 }}
-                className="w-full sm:w-auto px-10 py-3.5 text-sm font-medium text-slate-700 border border-slate-300 hover:border-slate-400 hover:bg-slate-50 transition-colors duration-200 rounded-sm"
+                className="w-full sm:w-auto px-10 py-3.5 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 transition-colors duration-200 rounded-sm"
               >
-                What did you get done last week?
+                Make decisions
               </a>
             </div>
           </div>
