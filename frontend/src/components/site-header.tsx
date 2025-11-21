@@ -87,14 +87,6 @@ export function SiteHeader() {
             </span>
             Corta.ai
           </Link>
-          <nav className="flex items-center gap-4 text-sm font-medium text-slate-600 ml-4">
-            <Link className={linkClass("/#features")} href="/#features">
-              Features
-            </Link>
-            <Link className={linkClass("/#workflows")} href="/#workflows">
-              Workflows
-            </Link>
-          </nav>
         </div>
 
         {/* Center: Toggle - absolutely centered */}
@@ -127,9 +119,6 @@ export function SiteHeader() {
         <div className="flex items-center gap-4 text-sm font-medium text-slate-600 ml-auto">
           <Link className={linkClass("/pricing")} href="/pricing">
             Pricing
-          </Link>
-          <Link className={linkClass("/docs")} href="/docs">
-            Docs
           </Link>
           {isAuthenticated ? (
             <>

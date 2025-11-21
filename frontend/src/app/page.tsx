@@ -139,7 +139,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-5xl px-6">
           <div className="mb-20 text-center">
             <h2 className="text-4xl font-light text-slate-900 sm:text-5xl mb-8">
-              For Development Teams
+              Developers
             </h2>
             <p className="mt-6 text-2xl font-light text-slate-600 sm:text-3xl mb-8 max-w-3xl mx-auto leading-relaxed">
               Let your work speak for itself. Don't get gotcha by politics, status updates, or explaining what you're working on.
@@ -194,7 +194,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-5xl px-6">
           <div className="mb-20 text-center">
             <h2 className="text-4xl font-light text-slate-900 sm:text-5xl mb-8">
-              For Stakeholders
+              Leadership
             </h2>
             <p className="mt-6 text-2xl font-light text-slate-600 sm:text-3xl mb-8 max-w-3xl mx-auto leading-relaxed">
               Make decisions with full context. Don't wait for updates or chase down status reports. I'll bring you what matters, when it matters.
