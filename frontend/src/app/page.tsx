@@ -43,7 +43,7 @@ export default function LandingPage() {
 
   return (
     <div className="relative overflow-hidden bg-white">
-      {/* Hero Section - Minimal with lots of whitespace */}
+      {/* Hero Section - Corta Introduction */}
       <section className="relative min-h-[85vh] flex items-center">
         <div className="absolute inset-0 -z-10">
           {/* Abstract geometric background */}
@@ -53,13 +53,13 @@ export default function LandingPage() {
         <div className="mx-auto max-w-4xl px-6 py-32 lg:py-40">
           <div className="text-center">
             <h1 className="text-6xl font-light tracking-tight text-slate-900 sm:text-7xl lg:text-8xl mb-8">
-              Developers
+              Hi, I'm Corta.
             </h1>
             <p className="mt-8 text-2xl font-light text-slate-600 sm:text-3xl lg:text-4xl mb-8 max-w-3xl mx-auto leading-relaxed">
-              Let your work speak for itself. Don't get gotcha by politics, status updates, or explaining what you're working on. 
+              I keep track of your team's work — the conversations, the decisions, the blockers — so nothing falls through the cracks.
             </p>
             <p className="mt-6 text-lg text-slate-500 sm:text-xl max-w-2xl mx-auto leading-relaxed">
-              I'll watch your Slack, Linear, and GitHub activity and automatically sync everything. I'll track progress, clean up tickets, and unblock your team—so you can focus on building. I'll help 🔥
+              I watch for anything that might slow your team down. I clean, I track, I clarify. So you can build in peace.
             </p>
             <div className="mt-16 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
               <a
@@ -71,7 +71,7 @@ export default function LandingPage() {
                 }}
                 className="w-full sm:w-auto px-10 py-3.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200 rounded-sm"
               >
-                Build
+                Meet Corta for Teams
               </a>
               <a
                 href="#stakeholders-section"
@@ -82,37 +82,70 @@ export default function LandingPage() {
                 }}
                 className="w-full sm:w-auto px-10 py-3.5 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 transition-colors duration-200 rounded-sm"
               >
-                Make decisions
+                Meet Corta for Stakeholders
               </a>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Key Message Banner - Minimal */}
-      <section className="border-t border-b border-slate-200 bg-white py-12">
-        <div className="mx-auto max-w-4xl px-6 text-center">
-          <p className="text-base font-light text-slate-700 sm:text-lg leading-relaxed">
-            <span className="font-normal">Corta is not a chatbot.</span> Cut the noise between you and your team.
-          </p>
-          <p className="mt-4 text-base text-slate-500 sm:text-lg font-light">
-            Corta is the operating system of product execution.
-          </p>
-          <p className="mt-3 text-sm text-slate-400 font-light">
-            It works continuously, automatically, and without prompting.
-          </p>
+      {/* What I Do Section */}
+      <section className="bg-white py-32">
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="mb-20 text-center">
+            <h2 className="text-4xl font-light text-slate-900 sm:text-5xl mb-6">
+              What I Do
+            </h2>
+          </div>
+          <div className="grid gap-16 md:grid-cols-2">
+            {[
+              {
+                number: "①",
+                title: "I listen.",
+                description:
+                  "I observe Slack to understand what your team is discussing, deciding, or stuck on.",
+              },
+              {
+                number: "②",
+                title: "I organize.",
+                description:
+                  "I track GitHub activity and Linear tickets — and keep them up to date automatically.",
+              },
+              {
+                number: "③",
+                title: "I unblock.",
+                description:
+                  "The moment I detect a blocker, I highlight it or fix it.",
+              },
+              {
+                number: "④",
+                title: "I communicate.",
+                description:
+                  "I create progress updates, weekly summaries, and context for stakeholders.",
+              },
+            ].map((item, idx) => (
+              <div key={idx} className="text-center md:text-left">
+                <div className="text-4xl font-light text-slate-300 mb-4">{item.number}</div>
+                <h3 className="text-2xl font-normal text-slate-900 mb-4">{item.title}</h3>
+                <p className="text-base text-slate-500 font-light leading-relaxed">{item.description}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* Devs Section - Clean and minimal */}
-      <section id="devs-section" className="bg-white py-32 scroll-mt-20">
+      <section id="devs-section" className="bg-slate-50 py-32 scroll-mt-20">
         <div className="mx-auto max-w-5xl px-6">
           <div className="mb-20 text-center">
-            <h2 className="text-4xl font-light text-slate-900 sm:text-5xl mb-6">
+            <h2 className="text-4xl font-light text-slate-900 sm:text-5xl mb-8">
               For Development Teams
             </h2>
+            <p className="mt-6 text-2xl font-light text-slate-600 sm:text-3xl mb-8 max-w-3xl mx-auto leading-relaxed">
+              Let your work speak for itself. Don't get gotcha by politics, status updates, or explaining what you're working on.
+            </p>
             <p className="mt-6 text-lg text-slate-500 font-light max-w-2xl mx-auto leading-relaxed">
-              Keep everyone aligned. Track progress. Clean up tickets. Ensure no one is blocked.
+              I'll watch your Slack, Linear, and GitHub activity and automatically sync everything. I'll track progress, clean up tickets, and unblock your team—so you can focus on building. I'll help 🔥
             </p>
           </div>
 
@@ -157,14 +190,17 @@ export default function LandingPage() {
       </section>
 
       {/* Stakeholders Section - Clean and minimal */}
-      <section id="stakeholders-section" className="bg-slate-50 py-32 scroll-mt-20">
+      <section id="stakeholders-section" className="bg-white py-32 scroll-mt-20">
         <div className="mx-auto max-w-5xl px-6">
           <div className="mb-20 text-center">
-            <h2 className="text-4xl font-light text-slate-900 sm:text-5xl mb-6">
+            <h2 className="text-4xl font-light text-slate-900 sm:text-5xl mb-8">
               For Stakeholders
             </h2>
+            <p className="mt-6 text-2xl font-light text-slate-600 sm:text-3xl mb-8 max-w-3xl mx-auto leading-relaxed">
+              Make decisions with full context. Don't wait for updates or chase down status reports. I'll bring you what matters, when it matters.
+            </p>
             <p className="mt-6 text-lg text-slate-500 font-light max-w-2xl mx-auto leading-relaxed">
-              Weekly updates. Executive summaries. Context-rich progress reports. Audience-aware communication.
+              I'll watch your team's work across Slack, Linear, and GitHub and automatically create weekly summaries, executive reports, and progress updates. I'll give you the context you need to make decisions—without anyone having to write a single status update. I'll help 🔥
             </p>
           </div>
 
@@ -173,17 +209,17 @@ export default function LandingPage() {
               {
                 title: "Weekly Updates",
                 description:
-                  "Automatically generated Friday summaries of what shipped, what's in progress, and what's blocked—no PM overhead required.",
+                  "I automatically generate Friday summaries of what shipped, what's in progress, and what's blocked—so you know what happened without asking.",
               },
               {
                 title: "Executive Summaries",
                 description:
-                  "High-level progress reports tailored for leadership, highlighting key accomplishments and strategic insights.",
+                  "I create high-level progress reports tailored for leadership, highlighting key accomplishments and strategic insights—written in your language.",
               },
               {
                 title: "Context-Rich Reports",
                 description:
-                  "Progress reports that include the full context—not just status updates, but the why and how behind each milestone.",
+                  "I include the full context in every report—not just status updates, but the why and how behind each milestone, so you understand the story.",
               },
             ].map((feature, idx) => (
               <div
@@ -200,7 +236,7 @@ export default function LandingPage() {
           <div className="mt-20 text-center">
             <Link
               href="/register"
-              className="inline-block px-10 py-3.5 text-sm font-medium text-slate-700 border border-slate-300 hover:border-slate-400 hover:bg-white transition-colors duration-200 rounded-sm bg-white"
+              className="inline-block px-10 py-3.5 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 transition-colors duration-200 rounded-sm"
             >
               Get Started for Stakeholders
             </Link>
@@ -257,26 +293,26 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Testimonials - Minimal */}
+      {/* Testimonials - Love Letters Style */}
       <section className="bg-slate-50 py-32">
         <div className="mx-auto max-w-5xl px-6">
           <h2 className="mb-16 text-center text-3xl font-light text-slate-900">
-            What Teams Are Saying
+            Love Letters
           </h2>
           <div className="grid gap-12 md:grid-cols-3">
             {[
               {
-                quote: "Corta removed 60% of my PM overhead.",
-                author: "Project Manager",
-              },
-              {
-                quote:
-                  "It keeps leadership synced without me writing a single update.",
+                quote: "Corta spotted a blocker before anyone said it out loud.",
                 author: "Engineering Lead",
               },
               {
                 quote:
-                  "Our engineers finally stay in sync without me manually pinging them.",
+                  "I haven't manually updated a ticket in 2 weeks.",
+                author: "Developer",
+              },
+              {
+                quote:
+                  "Our leadership now understands engineering without me writing a single report.",
                 author: "Tech Lead",
               },
             ].map((testimonial, idx) => (
