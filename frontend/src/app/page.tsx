@@ -61,7 +61,7 @@ export default function LandingPage() {
             <p className="text-lg text-slate-500 max-w-xl mx-auto">
               Conversations. Decisions. Blockers. All synced automatically.
             </p>
-            <div className="mt-16 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
+            <div className="mt-14 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <a
                 href="#devs-section"
                 onClick={(e) => {
@@ -69,7 +69,7 @@ export default function LandingPage() {
                   setAudience("devs");
                   document.getElementById("devs-section")?.scrollIntoView({ behavior: "smooth" });
                 }}
-                className="w-full sm:w-auto px-10 py-3.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200 rounded-sm"
+                className="w-full sm:w-auto px-8 py-4 text-base font-semibold text-white bg-blue-600 hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98] transition-all duration-150 rounded-full shadow-lg shadow-blue-600/25"
               >
                 Meet Corta for Teams
               </a>
@@ -80,7 +80,7 @@ export default function LandingPage() {
                   setAudience("stakeholders");
                   document.getElementById("stakeholders-section")?.scrollIntoView({ behavior: "smooth" });
                 }}
-                className="w-full sm:w-auto px-10 py-3.5 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 transition-colors duration-200 rounded-sm"
+                className="w-full sm:w-auto px-8 py-4 text-base font-semibold text-white bg-slate-900 hover:bg-slate-800 hover:scale-[1.02] active:scale-[0.98] transition-all duration-150 rounded-full shadow-lg shadow-slate-900/25"
               >
                 Meet Corta for Stakeholders
               </a>
@@ -95,7 +95,7 @@ export default function LandingPage() {
           <div className="mb-16 text-center">
             <h2 className="text-4xl font-light text-slate-900 sm:text-5xl mb-6">
               Developers
-            </h2>
+          </h2>
             <p className="text-xl text-slate-600 font-light max-w-xl mx-auto">
               Let your work speak for itself. I handle the rest.
             </p>
@@ -127,7 +127,7 @@ export default function LandingPage() {
           <div className="mt-12 text-center">
             <Link
               href="/register"
-              className="inline-block px-8 py-3 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors rounded-sm"
+              className="inline-block px-8 py-4 text-base font-semibold text-white bg-blue-600 hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98] transition-all duration-150 rounded-full shadow-lg shadow-blue-600/25"
             >
               Get Started
             </Link>
@@ -173,7 +173,7 @@ export default function LandingPage() {
           <div className="mt-12 text-center">
             <Link
               href="/register"
-              className="inline-block px-8 py-3 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 transition-colors rounded-sm"
+              className="inline-block px-8 py-4 text-base font-semibold text-white bg-slate-900 hover:bg-slate-800 hover:scale-[1.02] active:scale-[0.98] transition-all duration-150 rounded-full shadow-lg shadow-slate-900/25"
             >
               Get Started
             </Link>
@@ -186,7 +186,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-4xl px-6 text-center">
           <h2 className="text-3xl font-light text-slate-900 mb-4">
             Works with your tools
-          </h2>
+              </h2>
           <p className="text-base text-slate-500 mb-12">
             I plug into what you already use.
           </p>
@@ -204,8 +204,16 @@ export default function LandingPage() {
             {/* Linear */}
             <div className="flex flex-col items-center gap-3 group">
               <div className="h-14 w-14 rounded-full bg-white border border-slate-200 flex items-center justify-center transition-all group-hover:border-slate-300 group-hover:shadow-sm">
-                <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none">
-                  <path d="M3.78 2.826a.6.6 0 0 0-.978.659l2.447 3.64a9.043 9.043 0 0 0-.803 1.23l-3.69-1.867a.6.6 0 1 0-.543 1.07l3.68 1.862a9.122 9.122 0 0 0-.33 1.413L.152 11.1a.6.6 0 1 0 .096 1.196l3.4-.265c.003.323.02.644.053.962l-3.324.603a.6.6 0 1 0 .215 1.18l3.316-.602c.09.392.202.777.333 1.154l-3.126 1.28a.6.6 0 1 0 .456 1.11l3.123-1.279c.19.402.403.79.64 1.163l-2.725 1.943a.6.6 0 1 0 .697.977l2.716-1.937c.277.379.578.74.902 1.08l-2.16 2.408a.6.6 0 0 0 .894.8l2.15-2.396c.357.334.738.645 1.14.931l-1.431 2.644a.6.6 0 0 0 1.053.57l1.424-2.63a9.15 9.15 0 0 0 1.278.519l-.566 2.883a.6.6 0 0 0 1.177.232l.565-2.875c.438.095.885.165 1.34.21l.183 2.966a.6.6 0 1 0 1.197-.074l-.183-2.966c.45-.026.893-.076 1.328-.149l.733 2.869a.6.6 0 1 0 1.162-.297l-.732-2.864a9.085 9.085 0 0 0 1.27-.47l1.4 2.627a.6.6 0 1 0 1.058-.563l-1.397-2.62c.4-.23.783-.485 1.147-.762l2.035 2.386a.6.6 0 0 0 .913-.782l-2.028-2.378c.356-.313.691-.65 1.003-1.008l2.556 1.896a.6.6 0 1 0 .713-.966l-2.544-1.888c.283-.385.544-.79.78-1.211l2.923 1.262a.6.6 0 1 0 .476-1.1l-2.913-1.258c.192-.432.36-.88.503-1.338l3.141.581a.6.6 0 0 0 .219-1.18l-3.131-.578c.102-.455.178-.92.23-1.393l3.292.086a.6.6 0 0 0 .031-1.2l-3.287-.086a9.15 9.15 0 0 0-.112-1.396l3.328-.388a.6.6 0 1 0-.14-1.192l-3.317.387a9.053 9.053 0 0 0-.4-1.307l3.223-.92a.6.6 0 0 0-.33-1.154l-3.207.916a9.1 9.1 0 0 0-.697-1.166l2.979-1.476a.6.6 0 1 0-.535-1.074l-2.963 1.468a9.058 9.058 0 0 0-.957-.97l2.592-1.969a.6.6 0 0 0-.727-.955l-2.575 1.955a9.076 9.076 0 0 0-1.17-.765l2.045-2.39a.6.6 0 0 0-.91-.78l-2.027 2.368a9.035 9.035 0 0 0-1.333-.487l1.363-2.65a.6.6 0 1 0-1.068-.55l-1.351 2.626a9.107 9.107 0 0 0-1.455-.185L12.602.322a.6.6 0 0 0-1.195.1l.125 2.963a9.095 9.095 0 0 0-1.462.203L9.17.68a.6.6 0 1 0-1.16.306l.896 2.896c-.48.154-.947.336-1.398.546L6.085 1.906a.6.6 0 1 0-1.023.625l1.42 2.516a9.095 9.095 0 0 0-1.25.811L3.78 2.826z" fill="#5E6AD2"/>
+                <svg className="h-7 w-7" viewBox="0 0 100 100" fill="none">
+                  <clipPath id="linear-clip">
+                    <circle cx="50" cy="50" r="50"/>
+                  </clipPath>
+                  <g clipPath="url(#linear-clip)">
+                    <circle cx="50" cy="50" r="50" fill="#5E6AD2"/>
+                    <rect x="-20" y="55" width="140" height="12" rx="6" transform="rotate(-45 50 50)" fill="white"/>
+                    <rect x="-20" y="75" width="140" height="12" rx="6" transform="rotate(-45 50 50)" fill="white"/>
+                    <rect x="-20" y="95" width="140" height="12" rx="6" transform="rotate(-45 50 50)" fill="white"/>
+                  </g>
                 </svg>
               </div>
               <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Linear</span>
@@ -254,8 +262,8 @@ export default function LandingPage() {
                   "{testimonial.quote}"
                 </p>
                 <p className="text-xs text-slate-400 font-light uppercase tracking-wider">{testimonial.author}</p>
-              </div>
-            ))}
+                </div>
+              ))}
           </div>
         </div>
       </section>
@@ -272,7 +280,7 @@ export default function LandingPage() {
           <div className="mt-12">
             <Link
               href="/register"
-              className="inline-block px-10 py-3.5 text-sm font-medium text-blue-600 bg-white hover:bg-slate-50 transition-colors duration-200 rounded-sm"
+              className="inline-block px-10 py-4 text-base font-semibold text-blue-600 bg-white hover:bg-slate-50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-150 rounded-full shadow-lg"
             >
               Start Free Trial
             </Link>

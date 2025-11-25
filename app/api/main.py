@@ -54,7 +54,7 @@ if frontend_origin:
             if origin and origin not in default_origins:
                 default_origins.append(origin)
     else:
-        default_origins.append(frontend_origin)
+    default_origins.append(frontend_origin)
 
 # Always use regex pattern to allow Railway domains
 # This allows both corta.ai and any Railway *.up.railway.app domain
