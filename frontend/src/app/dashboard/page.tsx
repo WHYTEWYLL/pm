@@ -10,7 +10,6 @@ import {
 import axios from 'axios';
 import Link from 'next/link';
 import { 
-  LayoutDashboard, 
   CheckCircle2, 
   AlertCircle, 
   Github, 
@@ -18,14 +17,13 @@ import {
   Trello,
   ArrowRight, 
   RefreshCw, 
-  LogOut,
   Link2,
   GitPullRequest,
   FileText,
   Send,
   Activity
 } from 'lucide-react';
-import { loadSession, clearSession, AuthSession } from '../../lib/auth';
+import { loadSession, AuthSession } from '../../lib/auth';
 import { getSubscriptionStatus, SubscriptionStatus } from '../../lib/subscription';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
@@ -179,38 +177,10 @@ export default function DashboardPage() {
     workflowMutation.mutate(newSettings);
   };
 
-  const handleLogout = () => {
-    clearSession();
-    router.push('/login');
-  };
-
   if (!session) return null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-slate-100">
-      {/* Header */}
-      <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/70 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-violet-600 text-white shadow-lg shadow-violet-500/25">
-              <LayoutDashboard size={18} />
-            </div>
-            <span className="text-lg font-semibold text-slate-900">PM Assistant</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-medium text-violet-700">
-              {subscriptionStatus.data?.is_trial ? 'Trial' : subscriptionStatus.data?.tier === 'free' ? 'Free' : 'Pro'}
-            </span>
-            <button 
-              onClick={handleLogout} 
-              className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
-            >
-              <LogOut size={18} />
-            </button>
-          </div>
-        </div>
-      </header>
-
       <main className="mx-auto max-w-4xl px-6 py-10">
         {/* Notifications */}
         {(error || statusMessage) && (

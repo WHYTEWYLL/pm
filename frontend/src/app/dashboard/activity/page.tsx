@@ -74,9 +74,9 @@ export default function ActivityPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-slate-100">
-      {/* Header */}
-      <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/70 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
+      <main className="mx-auto max-w-4xl px-6 py-10">
+        {/* Page Header */}
+        <div className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link 
               href="/dashboard"
@@ -84,7 +84,7 @@ export default function ActivityPage() {
             >
               <ArrowLeft size={20} />
             </Link>
-            <h1 className="text-lg font-semibold text-slate-900">Activity Log</h1>
+            <h1 className="text-xl font-semibold text-slate-900">Activity Log</h1>
           </div>
           <div className="relative">
             <select
@@ -99,9 +99,6 @@ export default function ActivityPage() {
             <ChevronDown size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
           </div>
         </div>
-      </header>
-
-      <main className="mx-auto max-w-4xl px-6 py-8">
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           {isLoading ? (
             <div className="flex items-center justify-center py-16">
