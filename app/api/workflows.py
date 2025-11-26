@@ -424,6 +424,65 @@ async def publish_standup_endpoint(
             os.environ["LINEAR_TEAM_ID"] = original_team_id
 
 
+class SendStandupDMRequest(BaseModel):
+    email: str
+
+
+@router.post("/standup/send-dm")
+async def send_standup_dm_endpoint(
+    req: SendStandupDMRequest,
+    tenant_id: str = Depends(get_tenant_id),
+):
+    """Send standup reminder DM to a specific user by email."""
+    if not check_subscription(tenant_id):
+        raise HTTPException(status_code=403, detail="Subscription required")
+
+    db_tenant = get_tenant_db(tenant_id)
+
+    # Check Slack connection
+    slack_creds = db_tenant.get_oauth_credentials("slack")
+    if not slack_creds:
+        raise HTTPException(status_code=400, detail="Slack not connected")
+
+    # Check Linear connection
+    linear_creds = db_tenant.get_oauth_credentials("linear")
+    if not linear_creds:
+        raise HTTPException(status_code=400, detail="Linear not connected")
+
+    slack_token = decrypt_token(slack_creds["access_token"])
+    linear_token = decrypt_token(linear_creds["access_token"])
+
+    config = db_tenant.get_tenant_config()
+    team_id = config.get("linear_team_id") if config else None
+
+    from ..workflows.dev.standup import send_standup_dm
+
+    # Set credentials
+    original_linear_key = os.getenv("LINEAR_API_KEY")
+    original_team_id = os.getenv("LINEAR_TEAM_ID")
+    os.environ["LINEAR_API_KEY"] = linear_token
+    if team_id:
+        os.environ["LINEAR_TEAM_ID"] = team_id
+    os.environ["CURRENT_TENANT_ID"] = tenant_id
+
+    try:
+        result = send_standup_dm(
+            user_email=req.email,
+            slack_token=slack_token,
+            linear_api_key=linear_token,
+            linear_team_id=team_id,
+        )
+        return result
+    except Exception as e:
+        logger.exception("Failed to send standup DM")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if original_linear_key:
+            os.environ["LINEAR_API_KEY"] = original_linear_key
+        if original_team_id:
+            os.environ["LINEAR_TEAM_ID"] = original_team_id
+
+
 @router.post("/process")
 async def process_messages(
     execute: bool = False,
