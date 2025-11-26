@@ -2,22 +2,37 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { loadSession, clearSession } from "../lib/auth";
+import { loadSession, clearSession, getCurrentView, setCurrentView, fetchUserInfo, UserInfo } from "../lib/auth";
 import { useRouter, usePathname } from "next/navigation";
 
 type AudienceType = "devs" | "stakeholders";
+type ViewType = "dev" | "stakeholder";
 
 export function SiteHeader() {
   const [isMounted, setIsMounted] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [audience, setAudience] = useState<AudienceType>("devs");
+  const [currentView, setCurrentViewState] = useState<ViewType>("dev");
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const router = useRouter();
   const pathname = usePathname();
+
+  const isDashboard = pathname?.startsWith("/dashboard");
 
   useEffect(() => {
     setIsMounted(true);
     const session = loadSession();
     setIsAuthenticated(!!session);
+
+    if (session) {
+      // Load user info and current view
+      fetchUserInfo().then((user) => {
+        if (user) {
+          setUserInfo(user);
+          setCurrentViewState(getCurrentView() || user.default_view);
+        }
+      });
+    }
 
     const handleStorage = () => {
       const updated = loadSession();
@@ -87,7 +102,7 @@ export function SiteHeader() {
           </Link>
         </div>
 
-        {/* Center: Toggle - J&J style pill toggle */}
+        {/* Center: Toggle - Context-aware */}
         {pathname === "/" && (
           <div className="absolute left-1/2 -translate-x-1/2 flex items-center rounded-full bg-slate-100 p-1">
             <button
@@ -119,6 +134,41 @@ export function SiteHeader() {
               }`}
             >
               Leadership
+            </button>
+          </div>
+        )}
+
+        {/* Dashboard View Switcher */}
+        {isDashboard && isAuthenticated && (userInfo?.is_owner || userInfo?.permission === "admin") && (
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center rounded-full bg-slate-100 p-1">
+            <button
+              onClick={() => {
+                setCurrentView("dev");
+                setCurrentViewState("dev");
+                router.push("/dashboard");
+              }}
+              className={`rounded-full px-5 py-2 text-sm font-semibold transition-all duration-200 ${
+                currentView === "dev"
+                  ? "bg-violet-600 text-white shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              Dev
+            </button>
+            <div className="mx-1 h-4 w-px bg-slate-300"></div>
+            <button
+              onClick={() => {
+                setCurrentView("stakeholder");
+                setCurrentViewState("stakeholder");
+                router.push("/dashboard/stakeholder");
+              }}
+              className={`rounded-full px-5 py-2 text-sm font-semibold transition-all duration-200 ${
+                currentView === "stakeholder"
+                  ? "bg-emerald-600 text-white shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              Stakeholder
             </button>
           </div>
         )}

@@ -62,6 +62,19 @@ class UserResponse(BaseModel):
     full_name: Optional[str]
     email_verified: bool
     tenant_id: Optional[str]
+    default_view: Optional[str] = "dev"
+    permission: Optional[str] = "admin"
+    onboarding_completed: bool = False
+    is_owner: bool = False
+
+
+class UpdateUserView(BaseModel):
+    default_view: str  # 'dev' or 'stakeholder'
+
+
+class UpdateOnboarding(BaseModel):
+    default_view: str
+    onboarding_completed: bool = True
 
 
 class PasswordResetRequest(BaseModel):
@@ -558,17 +571,44 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
         if db.use_postgres:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT id, email, full_name, email_verified, tenant_id FROM users WHERE id = %s",
+                """SELECT u.id, u.email, u.full_name, u.email_verified, u.tenant_id,
+                          COALESCE(u.default_view, 'dev') as default_view,
+                          COALESCE(u.permission, 'admin') as permission,
+                          COALESCE(u.onboarding_completed, FALSE) as onboarding_completed,
+                          t.owner_user_id
+                   FROM users u
+                   LEFT JOIN tenants t ON u.tenant_id = t.id
+                   WHERE u.id = %s""",
                 [user_id],
             )
+            row = cursor.fetchone()
+            if row:
+                user_id, email, full_name, email_verified, tenant_id, default_view, permission, onboarding_completed, owner_id = row
+                is_owner = owner_id == user_id
         else:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT id, email, full_name, email_verified, tenant_id FROM users WHERE id = ?",
+                """SELECT u.id, u.email, u.full_name, u.email_verified, u.tenant_id,
+                          COALESCE(u.default_view, 'dev') as default_view,
+                          COALESCE(u.permission, 'admin') as permission,
+                          COALESCE(u.onboarding_completed, 0) as onboarding_completed,
+                          t.owner_user_id
+                   FROM users u
+                   LEFT JOIN tenants t ON u.tenant_id = t.id
+                   WHERE u.id = ?""",
                 [user_id],
             )
-        
-        row = cursor.fetchone()
+            row = cursor.fetchone()
+            if row:
+                user_id = row["id"]
+                email = row["email"]
+                full_name = row["full_name"]
+                email_verified = bool(row["email_verified"])
+                tenant_id = row["tenant_id"]
+                default_view = row["default_view"] or "dev"
+                permission = row["permission"] or "admin"
+                onboarding_completed = bool(row["onboarding_completed"])
+                is_owner = row["owner_user_id"] == user_id
     
     if not row:
         raise HTTPException(
@@ -576,20 +616,81 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
             detail="User not found"
         )
     
-    if db.use_postgres:
-        user_id, email, full_name, email_verified, tenant_id = row
-    else:
-        user_id = row["id"]
-        email = row["email"]
-        full_name = row["full_name"]
-        email_verified = bool(row["email_verified"])
-        tenant_id = row["tenant_id"]
-    
     return UserResponse(
         id=user_id,
         email=email,
         full_name=full_name,
         email_verified=email_verified,
         tenant_id=tenant_id,
+        default_view=default_view,
+        permission=permission,
+        onboarding_completed=onboarding_completed,
+        is_owner=is_owner,
     )
+
+
+@router.put("/me/view")
+async def update_user_view(
+    data: UpdateUserView,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update user's default view preference."""
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    if data.default_view not in ("dev", "stakeholder"):
+        raise HTTPException(status_code=400, detail="Invalid view. Must be 'dev' or 'stakeholder'")
+    
+    user_id = current_user["user_id"]
+    db = TenantDatabase(tenant_id=None)
+    
+    with db._conn() as conn:
+        cursor = conn.cursor()
+        if db.use_postgres:
+            cursor.execute(
+                "UPDATE users SET default_view = %s, updated_at = CURRENT_TIMESTAMP WHERE id = %s",
+                [data.default_view, user_id],
+            )
+        else:
+            cursor.execute(
+                "UPDATE users SET default_view = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+                [data.default_view, user_id],
+            )
+    
+    return {"status": "updated", "default_view": data.default_view}
+
+
+@router.post("/me/onboarding")
+async def complete_onboarding(
+    data: UpdateOnboarding,
+    current_user: dict = Depends(get_current_user)
+):
+    """Complete user onboarding with role selection."""
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    if data.default_view not in ("dev", "stakeholder"):
+        raise HTTPException(status_code=400, detail="Invalid view. Must be 'dev' or 'stakeholder'")
+    
+    user_id = current_user["user_id"]
+    db = TenantDatabase(tenant_id=None)
+    
+    with db._conn() as conn:
+        cursor = conn.cursor()
+        if db.use_postgres:
+            cursor.execute(
+                """UPDATE users 
+                   SET default_view = %s, onboarding_completed = TRUE, updated_at = CURRENT_TIMESTAMP 
+                   WHERE id = %s""",
+                [data.default_view, user_id],
+            )
+        else:
+            cursor.execute(
+                """UPDATE users 
+                   SET default_view = ?, onboarding_completed = 1, updated_at = CURRENT_TIMESTAMP 
+                   WHERE id = ?""",
+                [data.default_view, user_id],
+            )
+    
+    return {"status": "completed", "default_view": data.default_view}
 

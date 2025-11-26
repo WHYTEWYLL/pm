@@ -45,7 +45,7 @@ export default function RegisterPage() {
         email,
       });
 
-      router.push('/dashboard');
+      router.push('/onboarding');
     } catch (err: any) {
       const message =
         err?.response?.data?.detail ?? 'We could not create your account. Try again.';

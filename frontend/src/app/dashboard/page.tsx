@@ -23,7 +23,7 @@ import {
   Send,
   Activity
 } from 'lucide-react';
-import { loadSession, AuthSession } from '../../lib/auth';
+import { loadSession, AuthSession, fetchUserInfo, getCurrentView, setCurrentView, UserInfo } from '../../lib/auth';
 import { getSubscriptionStatus, SubscriptionStatus } from '../../lib/subscription';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
@@ -70,17 +70,50 @@ export default function DashboardPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [session, setSession] = useState<AuthSession | null>(null);
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [checking, setChecking] = useState(true);
 
   // --- Auth & Effects ---
   useEffect(() => {
-    const existing = loadSession();
-    if (!existing) {
-      router.replace('/login');
-      return;
+    async function checkAuth() {
+      const existing = loadSession();
+      if (!existing) {
+        router.replace('/login');
+        return;
+      }
+      setSession(existing);
+
+      // Fetch user info to check onboarding and view
+      const user = await fetchUserInfo();
+      if (!user) {
+        router.replace('/login');
+        return;
+      }
+
+      // Redirect to onboarding if not completed
+      if (!user.onboarding_completed) {
+        router.replace('/onboarding');
+        return;
+      }
+
+      // Set the view from user's preference if not already set
+      const currentView = getCurrentView();
+      if (!currentView || currentView !== user.default_view) {
+        setCurrentView(user.default_view);
+      }
+
+      // Redirect stakeholders to their dashboard
+      if (user.default_view === 'stakeholder') {
+        router.replace('/dashboard/stakeholder');
+        return;
+      }
+
+      setUserInfo(user);
+      setChecking(false);
     }
-    setSession(existing);
+    checkAuth();
   }, [router]);
 
   const authHeaders = useMemo(() => {
@@ -177,11 +210,32 @@ export default function DashboardPage() {
     workflowMutation.mutate(newSettings);
   };
 
-  if (!session) return null;
+  if (!session || checking) {
+    return (
+      <div className="flex min-h-[70vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-violet-600 border-t-transparent" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-slate-100">
       <main className="mx-auto max-w-4xl px-6 py-10">
+        {/* View Badge */}
+        <div className="mb-6 flex items-center gap-3">
+          <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-violet-700">
+            Dev View
+          </span>
+          {userInfo?.is_owner && (
+            <Link
+              href="/dashboard/stakeholder"
+              className="text-xs text-slate-400 hover:text-violet-600 hover:underline"
+            >
+              Switch to Stakeholder View →
+            </Link>
+          )}
+        </div>
+
         {/* Notifications */}
         {(error || statusMessage) && (
           <div className={`mb-8 flex items-center gap-3 rounded-xl border px-4 py-3 text-sm ${

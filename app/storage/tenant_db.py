@@ -181,6 +181,20 @@ class TenantDatabase:
                     )
                 except Exception:
                     pass  # Column already exists or not supported
+
+                # Add default_view and permission to users
+                try:
+                    cursor.execute(
+                        "ALTER TABLE users ADD COLUMN IF NOT EXISTS default_view TEXT DEFAULT 'dev'"
+                    )
+                    cursor.execute(
+                        "ALTER TABLE users ADD COLUMN IF NOT EXISTS permission TEXT DEFAULT 'admin'"
+                    )
+                    cursor.execute(
+                        "ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN DEFAULT FALSE"
+                    )
+                except Exception:
+                    pass  # Columns already exist
             else:
                 # SQLite schema
                 cursor = conn.cursor()
@@ -274,6 +288,20 @@ class TenantDatabase:
                     cursor.execute("ALTER TABLE tenants ADD COLUMN trial_ends_at TEXT")
                 except Exception:
                     pass  # Column already exists
+
+                # Add default_view and permission to users (SQLite migration)
+                try:
+                    cursor.execute("ALTER TABLE users ADD COLUMN default_view TEXT DEFAULT 'dev'")
+                except Exception:
+                    pass
+                try:
+                    cursor.execute("ALTER TABLE users ADD COLUMN permission TEXT DEFAULT 'admin'")
+                except Exception:
+                    pass
+                try:
+                    cursor.execute("ALTER TABLE users ADD COLUMN onboarding_completed INTEGER DEFAULT 0")
+                except Exception:
+                    pass
 
                 # Handle existing tenants with trial status but no trial_ends_at (SQLite migration)
                 from datetime import datetime, timezone, timedelta
