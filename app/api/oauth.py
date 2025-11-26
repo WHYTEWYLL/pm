@@ -1,7 +1,7 @@
 """OAuth integration handlers for Slack, Linear, and GitHub."""
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 import logging
 import secrets
 import httpx
@@ -12,6 +12,7 @@ from datetime import datetime, timezone, timedelta
 from .tenant import get_tenant_id
 from ..storage.tenant_db import TenantDatabase
 from ..storage.encryption import encrypt_token, decrypt_token
+from ..ingestion.slack import SlackService
 
 router = APIRouter(prefix="/api/oauth", tags=["oauth"])
 
@@ -30,6 +31,7 @@ def get_oauth_config():
                 "im:read",
                 "mpim:read",
                 "users:read",
+                "chat:write",  # Added chat:write for sending standups
             ],
         },
         "linear": {
@@ -280,3 +282,34 @@ async def disconnect_oauth(
             )
 
     return {"status": "disconnected", "service": service}
+
+
+@router.get("/slack/channels")
+async def get_slack_channels(
+    tenant_id: str = Depends(get_tenant_id),
+):
+    """List available Slack channels."""
+    db = TenantDatabase(tenant_id=tenant_id)
+    creds = db.get_oauth_credentials("slack")
+
+    if not creds:
+        raise HTTPException(status_code=400, detail="Slack not connected")
+
+    token = decrypt_token(creds["access_token"])
+    service = SlackService(token=token)
+
+    try:
+        channels = service.list_conversations(
+            types=["public_channel", "private_channel"]
+        )
+        # Filter to only show what's needed
+        return [
+            {
+                "id": c["id"],
+                "name": c.get("name", "Unknown"),
+                "is_private": c.get("is_private", False),
+            }
+            for c in channels
+        ]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

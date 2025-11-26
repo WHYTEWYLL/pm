@@ -1,10 +1,12 @@
 """Standup workflow: generate daily status report."""
 
 from __future__ import annotations
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
+from datetime import datetime, timezone
 
 from ...storage.db import Database
 from ...ingestion.linear import LinearClient
+from ...ingestion.slack import SlackService
 
 
 def generate_standup() -> Dict[str, Any]:
@@ -55,6 +57,125 @@ def generate_standup() -> Dict[str, Any]:
         "tracked_messages": has_issue,
         "total_messages": len(messages),
     }
+
+
+def publish_standup(
+    channel_id: str, slack_token: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    Generate and publish standup to Slack.
+
+    Args:
+        channel_id: Slack channel ID to post to
+        slack_token: Optional Slack token (if not in env)
+    """
+    data = generate_standup()
+    slack = SlackService(token=slack_token)
+
+    blocks = [
+        {
+            "type": "header",
+            "text": {
+                "type": "plain_text",
+                "text": f"📊 Daily Standup - {datetime.now(timezone.utc).strftime('%Y-%m-%d')}",
+                "emoji": True,
+            },
+        },
+        {"type": "divider"},
+    ]
+
+    # In Progress
+    if data["in_progress"]:
+        blocks.append(
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": f"*🟢 In Progress ({len(data['in_progress'])})*",
+                },
+            }
+        )
+        for i in data["in_progress"]:
+            blocks.append(
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f"*<{i['url']}|{i['identifier']}>*: {i['title']}\n> State: {i['state']['name']}",
+                    },
+                }
+            )
+
+    # Todo
+    if data["todo"]:
+        blocks.append({"type": "divider"})
+        blocks.append(
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": f"*🟡 Up Next ({len(data['todo'])})*",
+                },
+            }
+        )
+        # Show top 5
+        for i in data["todo"][:5]:
+            blocks.append(
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f"<{i['url']}|{i['identifier']}>: {i['title']}",
+                    },
+                }
+            )
+
+    # Untracked Messages
+    if data["untracked_messages"]:
+        blocks.append({"type": "divider"})
+        blocks.append(
+            {
+                "type": "section",
+                "text": {"type": "mrkdwn", "text": "*⚠️ Untracked Conversations*"},
+            }
+        )
+        blocks.append(
+            {
+                "type": "context",
+                "elements": [
+                    {"type": "mrkdwn", "text": "These discussions might need tickets:"}
+                ],
+            }
+        )
+
+        for msg in data["untracked_messages"][:3]:
+            # Format link to message if we had workspace domain, for now just channel ref
+            text = msg.get("text", "")[:100].replace("\n", " ") + "..."
+            blocks.append(
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f"*#{msg.get('channel_name')}*: {text}",
+                    },
+                }
+            )
+
+    # Footer
+    blocks.append({"type": "divider"})
+    blocks.append(
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "mrkdwn",
+                    "text": f"Processed {data['total_messages']} messages today.",
+                }
+            ],
+        }
+    )
+
+    return slack.send_message(channel_id, "Daily Standup Report", blocks=blocks)
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
-from . import oauth, tenant, workflows, stripe, auth
+from . import oauth, tenant, workflows, stripe, auth, settings
 
 app = FastAPI(
     title="PM Assistant API",
@@ -73,6 +73,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(oauth.router)
 app.include_router(workflows.router)
+app.include_router(settings.router)
 
 # Stripe router (optional)
 try:

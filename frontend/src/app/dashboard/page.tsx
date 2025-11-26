@@ -9,6 +9,22 @@ import {
 } from '@tanstack/react-query';
 import axios from 'axios';
 import Link from 'next/link';
+import { 
+  LayoutDashboard, 
+  CheckCircle2, 
+  AlertCircle, 
+  Github, 
+  Slack, 
+  Trello,
+  ArrowRight, 
+  RefreshCw, 
+  LogOut,
+  Link2,
+  GitPullRequest,
+  FileText,
+  Send,
+  Activity
+} from 'lucide-react';
 import { loadSession, clearSession, AuthSession } from '../../lib/auth';
 import { getSubscriptionStatus, SubscriptionStatus } from '../../lib/subscription';
 
@@ -23,6 +39,35 @@ interface OAuthStatus {
   connected_at?: string;
 }
 
+interface WorkflowSettings {
+  auto_sync: boolean;
+  link_conversations: boolean;
+  ticket_status_updates: boolean;
+  daily_standup: boolean;
+  create_tickets: boolean;
+}
+
+interface ActivityMetrics {
+  synced: number;
+  linked: number;
+  moved: number;
+  created: number;
+}
+
+interface ActivityResponse {
+  items: any[];
+  metrics: ActivityMetrics;
+  has_more: boolean;
+}
+
+const DEFAULT_WORKFLOWS: WorkflowSettings = {
+  auto_sync: true,
+  link_conversations: true,
+  ticket_status_updates: false,
+  daily_standup: false,
+  create_tickets: false,
+};
+
 export default function DashboardPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -30,6 +75,7 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
+  // --- Auth & Effects ---
   useEffect(() => {
     const existing = loadSession();
     if (!existing) {
@@ -41,107 +87,12 @@ export default function DashboardPage() {
 
   const authHeaders = useMemo(() => {
     if (!session) return undefined;
-    return {
-      Authorization: `Bearer ${session.token}`,
-    };
+    return { Authorization: `Bearer ${session.token}` };
   }, [session]);
 
   useEffect(() => {
-    if (error) {
-      const timeout = setTimeout(() => setError(null), 4000);
-      return () => clearTimeout(timeout);
-    }
-  }, [error]);
-
-  useEffect(() => {
-    if (statusMessage) {
-      const timeout = setTimeout(() => setStatusMessage(null), 4000);
-      return () => clearTimeout(timeout);
-    }
-  }, [statusMessage]);
-
-  const slackStatus = useQuery<OAuthStatus>({
-    queryKey: ['oauth', 'slack'],
-    queryFn: async () => {
-      const response = await axios.get(`${API_URL}/api/oauth/slack/status`, {
-        headers: authHeaders,
-      });
-      return response.data;
-    },
-    enabled: !!authHeaders,
-    retry: 1,
-  });
-
-  const linearStatus = useQuery<OAuthStatus>({
-    queryKey: ['oauth', 'linear'],
-    queryFn: async () => {
-      const response = await axios.get(`${API_URL}/api/oauth/linear/status`, {
-        headers: authHeaders,
-      });
-      return response.data;
-    },
-    enabled: !!authHeaders,
-    retry: 1,
-  });
-
-  const githubStatus = useQuery<OAuthStatus>({
-    queryKey: ['oauth', 'github'],
-    queryFn: async () => {
-      const response = await axios.get(`${API_URL}/api/oauth/github/status`, {
-        headers: authHeaders,
-      });
-      return response.data;
-    },
-    enabled: !!authHeaders,
-    retry: 1,
-  });
-
-  const subscriptionStatus = useQuery<SubscriptionStatus>({
-    queryKey: ['subscription'],
-    queryFn: getSubscriptionStatus,
-    enabled: !!session,
-    retry: 1,
-  });
-
-  const connectMutation = useMutation({
-    mutationFn: async (service: OAuthService) => {
-      const redirectUri = `${window.location.origin}/oauth/callback/${service}`;
-      const res = await axios.get(
-        `${API_URL}/api/oauth/${service}/authorize`,
-        {
-          params: { redirect_uri: redirectUri },
-          headers: authHeaders,
-        }
-      );
-      const popup = window.open(
-        res.data.auth_url,
-        `${service}-auth`,
-        'width=640,height=720'
-      );
-
-      if (!popup) {
-        setError('Popup blocked. Please allow popups for this site and try again.');
-        return;
-      }
-
-      const timer = window.setInterval(() => {
-        if (popup.closed) {
-          window.clearInterval(timer);
-          queryClient.invalidateQueries({ queryKey: ['oauth', service] });
-          setStatusMessage(`${capitalize(service)} connection updated.`);
-        }
-      }, 500);
-    },
-    onError: () => {
-      setError('Failed to start OAuth flow. Check credentials and try again.');
-    },
-  });
-
-  useEffect(() => {
     const handler = (event: MessageEvent) => {
-      if (event.origin !== window.location.origin) {
-        return;
-      }
+      if (event.origin !== window.location.origin) return;
       const payload = event.data;
       if (payload?.type === 'oauth-complete' && payload?.service) {
         queryClient.invalidateQueries({ queryKey: ['oauth', payload.service] });
@@ -152,320 +103,365 @@ export default function DashboardPage() {
         }
       }
     };
-
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
   }, [queryClient]);
 
-  const disconnectMutation = useMutation({
+  // --- Queries ---
+  const slackStatus = useQuery<OAuthStatus>({
+    queryKey: ['oauth', 'slack'],
+    queryFn: async () => (await axios.get(`${API_URL}/api/oauth/slack/status`, { headers: authHeaders })).data,
+    enabled: !!authHeaders,
+  });
+
+  const linearStatus = useQuery<OAuthStatus>({
+    queryKey: ['oauth', 'linear'],
+    queryFn: async () => (await axios.get(`${API_URL}/api/oauth/linear/status`, { headers: authHeaders })).data,
+    enabled: !!authHeaders,
+  });
+
+  const githubStatus = useQuery<OAuthStatus>({
+    queryKey: ['oauth', 'github'],
+    queryFn: async () => (await axios.get(`${API_URL}/api/oauth/github/status`, { headers: authHeaders })).data,
+    enabled: !!authHeaders,
+  });
+
+  const subscriptionStatus = useQuery<SubscriptionStatus>({
+    queryKey: ['subscription'],
+    queryFn: getSubscriptionStatus,
+    enabled: !!session,
+  });
+
+  // Workflow settings
+  const workflowsQuery = useQuery<WorkflowSettings>({
+    queryKey: ['workflows'],
+    queryFn: async () => (await axios.get(`${API_URL}/api/settings/workflows`, { headers: authHeaders })).data,
+    enabled: !!authHeaders,
+  });
+
+  // Activity metrics
+  const activityQuery = useQuery<ActivityResponse>({
+    queryKey: ['activity'],
+    queryFn: async () => (await axios.get(`${API_URL}/api/settings/activity?days=7&limit=0`, { headers: authHeaders })).data,
+    enabled: !!authHeaders,
+  });
+
+  const workflows = workflowsQuery.data ?? DEFAULT_WORKFLOWS;
+  const metrics = activityQuery.data?.metrics ?? { synced: 0, linked: 0, moved: 0, created: 0 };
+
+  // --- Mutations ---
+  const connectMutation = useMutation({
     mutationFn: async (service: OAuthService) => {
-      await axios.delete(`${API_URL}/api/oauth/${service}/disconnect`, {
+      const redirectUri = `${window.location.origin}/oauth/callback/${service}`;
+      const res = await axios.get(`${API_URL}/api/oauth/${service}/authorize`, {
+        params: { redirect_uri: redirectUri },
         headers: authHeaders,
       });
-    },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['oauth', variables] });
-      setStatusMessage(`${capitalize(variables)} disconnected.`);
-    },
-    onError: () => {
-      setError('Unable to disconnect service.');
+      const popup = window.open(res.data.auth_url, `${service}-auth`, 'width=640,height=720');
+      if (!popup) setError('Popup blocked. Allow popups and try again.');
     },
   });
 
-  const ingestMutation = useMutation({
-    mutationFn: async (service: OAuthService) => {
-      await axios.post(
-        `${API_URL}/api/workflows/ingest/${service}`,
-        {},
-        { headers: authHeaders }
-      );
+  const workflowMutation = useMutation({
+    mutationFn: async (newSettings: WorkflowSettings) => {
+      await axios.put(`${API_URL}/api/settings/workflows`, newSettings, { headers: authHeaders });
     },
-    onSuccess: (_data, variables) => {
-      setStatusMessage(`${capitalize(variables)} ingestion kicked off.`);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workflows'] });
     },
     onError: () => {
-      setError('Failed to trigger ingestion. Confirm the integration is connected.');
+      setError('Failed to save workflow settings.');
     },
   });
+
+  const toggleWorkflow = (key: keyof WorkflowSettings) => {
+    const newSettings = { ...workflows, [key]: !workflows[key] };
+    workflowMutation.mutate(newSettings);
+  };
 
   const handleLogout = () => {
     clearSession();
     router.push('/login');
   };
 
-  if (!session) {
-    return null;
-  }
-
-  const services = [
-    {
-      key: 'slack' as const,
-      title: 'Slack',
-      description: 'Sync threads, DMs, and private channels where your team collaborates.',
-      status: slackStatus,
-    },
-    {
-      key: 'linear' as const,
-      title: 'Linear',
-      description: 'Keep tickets in sync, close loops, and surface stale work automatically.',
-      status: linearStatus,
-    },
-    {
-      key: 'github' as const,
-      title: 'GitHub',
-      description:
-        'Track pull requests, reviews, and commits shaping your product every day.',
-      status: githubStatus,
-    },
-  ];
+  if (!session) return null;
 
   return (
-    <div className="bg-slate-50 py-12">
-      <div className="mx-auto max-w-6xl px-6">
-        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-3xl font-semibold text-slate-900">
-              Welcome back, {session.email ?? 'PM'}
-            </h1>
-            <p className="mt-1 text-sm text-slate-500">
-              Manage your workspace integrations and trigger workflows on demand.
-            </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-slate-100">
+      {/* Header */}
+      <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/70 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-violet-600 text-white shadow-lg shadow-violet-500/25">
+              <LayoutDashboard size={18} />
+            </div>
+            <span className="text-lg font-semibold text-slate-900">PM Assistant</span>
           </div>
           <div className="flex items-center gap-3">
-            <Link
-              href="/docs"
-              className="rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:border-brand-300 hover:text-brand-600"
+            <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-medium text-violet-700">
+              {subscriptionStatus.data?.is_trial ? 'Trial' : subscriptionStatus.data?.tier === 'free' ? 'Free' : 'Pro'}
+            </span>
+            <button 
+              onClick={handleLogout} 
+              className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
             >
-              View docs
-            </Link>
-            <button
-              onClick={handleLogout}
-              className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-slate-800"
-            >
-              Log out
+              <LogOut size={18} />
             </button>
           </div>
         </div>
+      </header>
 
-        {error && (
-          <div className="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {error}
-          </div>
-        )}
-
-        {statusMessage && (
-          <div className="mb-6 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-            {statusMessage}
-          </div>
-        )}
-
-        {/* Subscription Status */}
-        {subscriptionStatus.data && (
-          <div className="mb-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-semibold text-slate-900">
-                  Subscription Status
-                </h2>
-                <div className="mt-2 flex items-center gap-4 text-sm text-slate-600">
-                  <span>
-                    Tier: <span className="font-medium capitalize">{subscriptionStatus.data.tier}</span>
-                  </span>
-                  <span>
-                    Status: <span className="font-medium capitalize">{subscriptionStatus.data.status}</span>
-                  </span>
-                  {subscriptionStatus.data.is_trial_active && (
-                    <span className="text-brand-600 font-medium">
-                      {subscriptionStatus.data.trial_days_remaining} days left in trial
-                    </span>
-                  )}
-                </div>
-              </div>
-              {subscriptionStatus.data.is_trial_active && (
-                <Link
-                  href="/pricing"
-                  className="rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
-                >
-                  Upgrade Now
-                </Link>
-              )}
-            </div>
-            {subscriptionStatus.data.status === 'expired' && (
-              <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                Your trial has expired. Subscribe to continue using the platform.
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Integrations */}
-        <section className="grid gap-6 lg:grid-cols-3">
-          {services.map((service) => (
-            <div
-              key={service.key}
-              className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-100"
+      <main className="mx-auto max-w-4xl px-6 py-10">
+        {/* Notifications */}
+        {(error || statusMessage) && (
+          <div className={`mb-8 flex items-center gap-3 rounded-xl border px-4 py-3 text-sm ${
+            error ? 'border-red-200 bg-red-50 text-red-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'
+          }`}>
+            {error ? <AlertCircle size={18} /> : <CheckCircle2 size={18} />}
+            <span className="flex-1">{error || statusMessage}</span>
+            <button 
+              onClick={() => { setError(null); setStatusMessage(null); }}
+              className="font-medium hover:underline"
             >
-              <div>
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-slate-900">
-                    {service.title}
-                  </h2>
-                  <span
-                    className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                      service.status.data?.connected
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-slate-100 text-slate-600'
-                    }`}
-                  >
-                    {service.status.data?.connected ? 'Connected' : 'Disconnected'}
-                  </span>
-                </div>
-                <p className="mt-2 text-sm text-slate-500">
-                  {service.description}
-                </p>
-                {service.status.data?.connected && (
-                  <p className="mt-3 text-xs text-slate-400">
-                    Workspace: <span className="font-medium text-slate-600">{service.status.data.workspace}</span>
-                  </p>
-                )}
-              </div>
-              <div className="mt-6 flex flex-wrap gap-2">
-                {service.status.data?.connected ? (
-                  <>
-                    <button
-                      onClick={() => ingestMutation.mutate(service.key)}
-                      className="flex-1 rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
-                    >
-                      Run ingestion
-                    </button>
-                    <button
-                      onClick={() => disconnectMutation.mutate(service.key)}
-                      className="flex-1 rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 hover:border-red-300"
-                    >
-                      Disconnect
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    onClick={() => connectMutation.mutate(service.key)}
-                    className="flex-1 rounded-md border border-brand-200 bg-brand-50 px-4 py-2 text-sm font-semibold text-brand-600 hover:border-brand-300"
-                  >
-                    Connect
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
+              Dismiss
+            </button>
+          </div>
+        )}
+
+        {/* Integrations Section */}
+        <section className="mb-10">
+          <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-400">
+            Integrations
+          </h2>
+          <div className="grid grid-cols-3 gap-4">
+            <IntegrationCard
+              name="Slack"
+              description="Read conversations"
+              icon={<Slack size={24} />}
+              connected={!!slackStatus.data?.connected}
+              loading={slackStatus.isLoading}
+              onConnect={() => connectMutation.mutate('slack')}
+            />
+            <IntegrationCard
+              name="Linear"
+              description="Manage tickets"
+              icon={<Trello size={24} />}
+              connected={!!linearStatus.data?.connected}
+              loading={linearStatus.isLoading}
+              onConnect={() => connectMutation.mutate('linear')}
+            />
+            <IntegrationCard
+              name="GitHub"
+              description="Track PRs & issues"
+              icon={<Github size={24} />}
+              connected={!!githubStatus.data?.connected}
+              loading={githubStatus.isLoading}
+              onConnect={() => connectMutation.mutate('github')}
+              badge="Scale"
+            />
+          </div>
         </section>
 
-        {/* Workflows */}
-        <section className="mt-12">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-slate-900">Workflows</h2>
-            <span className="text-xs uppercase tracking-wide text-slate-400">
-              Coming soon: schedule & configuration UI
-            </span>
-          </div>
-          <div className="mt-6 grid gap-4 lg:grid-cols-2">
-            {([
-              {
-                name: 'Daily standup',
-                description:
-                  'Generates a daily briefing of what shipped, ongoing work, and blockers across GitHub, Slack, and Linear.',
-                endpoint: '/api/workflows/standup',
-                actionLabel: 'View summary',
-                link: '/standup',
-              },
-              {
-                name: 'Process inbox',
-                description:
-                  'Review messages and automatically create or update Linear tickets with AI assistance.',
-                endpoint: '/api/workflows/process',
-                actionLabel: 'Run (dry mode)',
-              },
-              {
-                name: 'Move tickets',
-                description:
-                  'Review inactive work and move issues through the workflow with confidence scores.',
-                endpoint: '/api/workflows/move-tickets',
-                actionLabel: 'Run analysis',
-              },
-              {
-                name: 'Weekly report',
-                description:
-                  'Summarize weekly accomplishments and send to stakeholders every Friday morning.',
-                endpoint: null,
-                actionLabel: 'Schedule soon',
-              },
-            ] as Array<{
-              name: string;
-              description: string;
-              endpoint: string | null;
-              actionLabel: string;
-              link?: string;
-            }>).map((workflow) => (
-              <div
-                key={workflow.name}
-                className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-100"
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold text-slate-900">
-                      {workflow.name}
-                    </h3>
-                    <p className="mt-2 text-sm text-slate-500">
-                      {workflow.description}
-                    </p>
-                  </div>
-                  <span className="rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-600">
-                    AI powered
-                  </span>
-                </div>
-                <div className="mt-4 flex gap-3 text-xs text-slate-400">
-                  <span>Audit logs</span>
-                  <span>Tenant aware</span>
-                  <span>Background tasks</span>
-                </div>
-                <div className="mt-6">
-                  {workflow.link ? (
-                    <Link
-                      href={workflow.link}
-                      className="inline-block rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
-                    >
-                      {workflow.actionLabel}
-                    </Link>
-                  ) : workflow.endpoint ? (
-                    <button
-                      onClick={async () => {
-                        try {
-                          await axios.post(
-                            `${API_URL}${workflow.endpoint}`,
-                            {},
-                            { headers: authHeaders }
-                          );
-                          setStatusMessage(`${workflow.name} triggered.`);
-                        } catch (err) {
-                          setError(`Failed to run ${workflow.name.toLowerCase()}.`);
-                        }
-                      }}
-                      className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
-                    >
-                      {workflow.actionLabel}
-                    </button>
-                  ) : (
-                    <button
-                      disabled
-                      className="cursor-not-allowed rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-400"
-                    >
-                      {workflow.actionLabel}
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
+        {/* Workflows Section */}
+        <section className="mb-10">
+          <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-400">
+            Workflows
+          </h2>
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <WorkflowRow
+              name="Auto-Sync"
+              description="Pull messages & tickets every hour"
+              icon={<RefreshCw size={18} />}
+              enabled={workflows.auto_sync}
+              onToggle={() => toggleWorkflow('auto_sync')}
+            />
+            <WorkflowRow
+              name="Link Conversations"
+              description="Match Slack messages to Linear tickets"
+              icon={<Link2 size={18} />}
+              enabled={workflows.link_conversations}
+              onToggle={() => toggleWorkflow('link_conversations')}
+            />
+            <WorkflowRow
+              name="Ticket Status Updates"
+              description="Auto-move tickets based on conversation context"
+              icon={<GitPullRequest size={18} />}
+              enabled={workflows.ticket_status_updates}
+              onToggle={() => toggleWorkflow('ticket_status_updates')}
+            />
+            <WorkflowRow
+              name="Daily Standup"
+              description="Post summary to Slack each morning"
+              icon={<Send size={18} />}
+              enabled={workflows.daily_standup}
+              onToggle={() => toggleWorkflow('daily_standup')}
+            />
+            <WorkflowRow
+              name="Create Tickets"
+              description="Auto-create tickets from untracked conversations"
+              icon={<FileText size={18} />}
+              enabled={workflows.create_tickets}
+              onToggle={() => toggleWorkflow('create_tickets')}
+              isLast
+            />
           </div>
         </section>
+
+        {/* Metrics Section */}
+        <section className="mb-10">
+          <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-400">
+            Last 7 Days
+          </h2>
+          <div className="grid grid-cols-4 gap-4">
+            <MetricCard label="Synced" value={metrics.synced} color="slate" />
+            <MetricCard label="Linked" value={metrics.linked} color="violet" />
+            <MetricCard label="Moved" value={metrics.moved} color="amber" />
+            <MetricCard label="Created" value={metrics.created} color="emerald" />
+          </div>
+        </section>
+
+        {/* Activity Log Button */}
+        <div className="flex justify-center">
+          <Link
+            href="/dashboard/activity"
+            className="group flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-medium text-slate-700 shadow-sm transition-all hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700 hover:shadow-md"
+          >
+            <Activity size={18} />
+            View Activity Log
+            <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+          </Link>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+// --- Subcomponents ---
+
+function IntegrationCard({ 
+  name, 
+  description, 
+  icon, 
+  connected, 
+  loading,
+  onConnect,
+  badge 
+}: { 
+  name: string; 
+  description: string; 
+  icon: React.ReactNode; 
+  connected: boolean;
+  loading: boolean;
+  onConnect: () => void;
+  badge?: string;
+}) {
+  return (
+    <div className={`relative rounded-2xl border p-5 transition-all ${
+      connected 
+        ? 'border-emerald-200 bg-gradient-to-br from-emerald-50 to-white' 
+        : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm'
+    }`}>
+      {badge && (
+        <span className="absolute right-3 top-3 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-amber-700">
+          {badge}
+        </span>
+      )}
+      <div className={`mb-3 inline-flex rounded-xl p-2.5 ${
+        connected ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'
+      }`}>
+        {icon}
       </div>
+      <h3 className="font-semibold text-slate-900">{name}</h3>
+      <p className="mt-0.5 text-sm text-slate-500">{description}</p>
+      
+      {loading ? (
+        <div className="mt-4 h-8 w-20 animate-pulse rounded-lg bg-slate-100" />
+      ) : connected ? (
+        <div className="mt-4 flex items-center gap-1.5 text-sm font-medium text-emerald-600">
+          <CheckCircle2 size={16} />
+          Connected
+        </div>
+      ) : (
+        <button
+          onClick={onConnect}
+          className="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+        >
+          Connect
+        </button>
+      )}
+    </div>
+  );
+}
+
+function WorkflowRow({ 
+  name, 
+  description, 
+  icon, 
+  enabled, 
+  onToggle,
+  isLast = false 
+}: { 
+  name: string; 
+  description: string; 
+  icon: React.ReactNode; 
+  enabled: boolean;
+  onToggle: () => void;
+  isLast?: boolean;
+}) {
+  return (
+    <div className={`flex items-center justify-between px-5 py-4 ${!isLast ? 'border-b border-slate-100' : ''}`}>
+      <div className="flex items-center gap-4">
+        <div className={`rounded-lg p-2 ${enabled ? 'bg-violet-100 text-violet-600' : 'bg-slate-100 text-slate-400'}`}>
+          {icon}
+        </div>
+        <div>
+          <h4 className="font-medium text-slate-900">{name}</h4>
+          <p className="text-sm text-slate-500">{description}</p>
+        </div>
+      </div>
+      <button
+        onClick={onToggle}
+        className={`relative h-7 w-12 rounded-full transition-colors ${
+          enabled ? 'bg-violet-600' : 'bg-slate-200'
+        }`}
+      >
+        <span
+          className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-all ${
+            enabled ? 'left-6' : 'left-1'
+          }`}
+        />
+      </button>
+    </div>
+  );
+}
+
+function MetricCard({ 
+  label, 
+  value, 
+  color 
+}: { 
+  label: string; 
+  value: number;
+  color: 'slate' | 'violet' | 'amber' | 'emerald';
+}) {
+  const colorClasses = {
+    slate: 'bg-slate-50 border-slate-200',
+    violet: 'bg-violet-50 border-violet-200',
+    amber: 'bg-amber-50 border-amber-200',
+    emerald: 'bg-emerald-50 border-emerald-200',
+  };
+  
+  const textClasses = {
+    slate: 'text-slate-900',
+    violet: 'text-violet-900',
+    amber: 'text-amber-900',
+    emerald: 'text-emerald-900',
+  };
+
+  return (
+    <div className={`rounded-2xl border p-5 text-center ${colorClasses[color]}`}>
+      <p className={`text-3xl font-bold ${textClasses[color]}`}>{value}</p>
+      <p className="mt-1 text-sm font-medium text-slate-500">{label}</p>
     </div>
   );
 }
@@ -473,4 +469,3 @@ export default function DashboardPage() {
 function capitalize(text: string) {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
-

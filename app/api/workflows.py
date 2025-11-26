@@ -6,7 +6,8 @@ from datetime import datetime, timezone, timedelta
 import os
 from typing import Dict, Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Body
+from pydantic import BaseModel
 
 from .tenant import get_tenant_id, get_tenant_db, check_subscription, check_tier_access
 from ..storage.tenant_db import TenantDatabase
@@ -18,6 +19,10 @@ from ..storage.db import Database
 
 router = APIRouter(prefix="/api/workflows", tags=["workflows"])
 logger = logging.getLogger("workflows")
+
+
+class PublishStandupRequest(BaseModel):
+    channel_id: str
 
 
 @router.post("/ingest/slack")
@@ -363,6 +368,56 @@ async def get_standup(
         }
     finally:
         # Restore original env vars
+        if original_linear_key:
+            os.environ["LINEAR_API_KEY"] = original_linear_key
+        if original_team_id:
+            os.environ["LINEAR_TEAM_ID"] = original_team_id
+
+
+@router.post("/standup/publish")
+async def publish_standup_endpoint(
+    req: PublishStandupRequest,
+    tenant_id: str = Depends(get_tenant_id),
+):
+    """Publish standup to Slack."""
+    if not check_subscription(tenant_id):
+        raise HTTPException(status_code=403, detail="Subscription required")
+
+    db_tenant = get_tenant_db(tenant_id)
+
+    # Linear Creds
+    linear_creds = db_tenant.get_oauth_credentials("linear")
+    if not linear_creds:
+        raise HTTPException(status_code=400, detail="Linear not connected")
+
+    # Slack Creds
+    slack_creds = db_tenant.get_oauth_credentials("slack")
+    if not slack_creds:
+        raise HTTPException(status_code=400, detail="Slack not connected")
+
+    linear_token = decrypt_token(linear_creds["access_token"])
+    slack_token = decrypt_token(slack_creds["access_token"])
+
+    config = db_tenant.get_tenant_config()
+    team_id = config.get("linear_team_id") if config else None
+
+    from ..workflows.dev.standup import publish_standup
+
+    # Temporarily set credentials for the workflow
+    original_linear_key = os.getenv("LINEAR_API_KEY")
+    original_team_id = os.getenv("LINEAR_TEAM_ID")
+    os.environ["LINEAR_API_KEY"] = linear_token
+    if team_id:
+        os.environ["LINEAR_TEAM_ID"] = team_id
+    os.environ["CURRENT_TENANT_ID"] = tenant_id
+
+    try:
+        result = publish_standup(channel_id=req.channel_id, slack_token=slack_token)
+        return {"status": "published", "result": result}
+    except Exception as e:
+        logger.exception("Failed to publish standup")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
         if original_linear_key:
             os.environ["LINEAR_API_KEY"] = original_linear_key
         if original_team_id:

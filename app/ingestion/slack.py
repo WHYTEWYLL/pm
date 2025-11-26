@@ -105,6 +105,15 @@ class SlackService:
             mapping[cid] = name
         return mapping
 
+    def send_message(
+        self, channel_id: str, text: str, blocks: Optional[List[Dict]] = None
+    ) -> Dict[str, Any]:
+        """Send a message to a Slack channel."""
+        kwargs = {"channel": channel_id, "text": text}
+        if blocks:
+            kwargs["blocks"] = blocks
+        return self._safe_call("chat_postMessage", **kwargs)
+
     # To do: Change this.
     # We should fetch messages from the last 24h, load it in the databases and then filter which ones are relevant to the user.
     # once we have the messages, get the thread replies and add them to the messages.
