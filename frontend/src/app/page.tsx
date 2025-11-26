@@ -69,9 +69,9 @@ export default function LandingPage() {
                   setAudience("devs");
                   document.getElementById("devs-section")?.scrollIntoView({ behavior: "smooth" });
                 }}
-                className="w-full sm:w-auto px-8 py-4 text-base font-semibold text-white bg-blue-600 hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98] transition-all duration-150 rounded-full shadow-lg shadow-blue-600/25"
+                className="w-full sm:w-auto px-8 py-4 text-base font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-all duration-150 rounded-full"
               >
-                Meet Corta for Teams
+                For Developers
               </a>
               <a
                 href="#stakeholders-section"
@@ -80,9 +80,9 @@ export default function LandingPage() {
                   setAudience("stakeholders");
                   document.getElementById("stakeholders-section")?.scrollIntoView({ behavior: "smooth" });
                 }}
-                className="w-full sm:w-auto px-8 py-4 text-base font-semibold text-white bg-slate-900 hover:bg-slate-800 hover:scale-[1.02] active:scale-[0.98] transition-all duration-150 rounded-full shadow-lg shadow-slate-900/25"
+                className="w-full sm:w-auto px-8 py-4 text-base font-semibold text-white bg-slate-900 hover:bg-slate-800 transition-all duration-150 rounded-full"
               >
-                Meet Corta for Stakeholders
+                For Leadership
               </a>
             </div>
           </div>
@@ -90,7 +90,7 @@ export default function LandingPage() {
       </section>
 
       {/* Devs Section */}
-      <section id="devs-section" className="bg-slate-50 py-24 scroll-mt-20">
+      <section id="devs-section" className="bg-white py-24 scroll-mt-20">
         <div className="mx-auto max-w-5xl px-6">
           <div className="mb-16 text-center">
             <h2 className="text-4xl font-light text-slate-900 sm:text-5xl mb-6">
@@ -127,7 +127,7 @@ export default function LandingPage() {
           <div className="mt-12 text-center">
             <Link
               href="/register"
-              className="inline-block px-8 py-4 text-base font-semibold text-white bg-blue-600 hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98] transition-all duration-150 rounded-full shadow-lg shadow-blue-600/25"
+              className="inline-block px-8 py-4 text-base font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-all duration-150 rounded-full"
             >
               Get Started
             </Link>
@@ -135,8 +135,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Leadership Section */}
-      <section id="stakeholders-section" className="bg-white py-24 scroll-mt-20">
+      {/* Leadership Section - Highlighted */}
+      <section id="stakeholders-section" className="bg-[#faf9f7] py-24 scroll-mt-20">
         <div className="mx-auto max-w-5xl px-6">
           <div className="mb-16 text-center">
             <h2 className="text-4xl font-light text-slate-900 sm:text-5xl mb-6">
@@ -173,7 +173,7 @@ export default function LandingPage() {
           <div className="mt-12 text-center">
             <Link
               href="/register"
-              className="inline-block px-8 py-4 text-base font-semibold text-white bg-slate-900 hover:bg-slate-800 hover:scale-[1.02] active:scale-[0.98] transition-all duration-150 rounded-full shadow-lg shadow-slate-900/25"
+              className="inline-block px-8 py-4 text-base font-semibold text-white bg-slate-900 hover:bg-slate-800 transition-all duration-150 rounded-full"
             >
               Get Started
             </Link>
@@ -182,7 +182,7 @@ export default function LandingPage() {
       </section>
 
       {/* Integrations Section */}
-      <section className="bg-slate-50 py-20">
+      <section className="bg-white py-20">
         <div className="mx-auto max-w-4xl px-6 text-center">
           <h2 className="text-3xl font-light text-slate-900 mb-4">
             Works with your tools
@@ -256,9 +256,9 @@ export default function LandingPage() {
             ].map((testimonial, idx) => (
               <div
                 key={idx}
-                className="border-t border-slate-200 pt-8"
+                className="pt-6"
               >
-                <p className="text-base text-slate-700 font-light leading-relaxed mb-6">
+                <p className="text-base text-slate-700 font-light leading-relaxed mb-4">
                   "{testimonial.quote}"
                 </p>
                 <p className="text-xs text-slate-400 font-light uppercase tracking-wider">{testimonial.author}</p>
@@ -280,7 +280,7 @@ export default function LandingPage() {
           <div className="mt-12">
             <Link
               href="/register"
-              className="inline-block px-10 py-4 text-base font-semibold text-blue-600 bg-white hover:bg-slate-50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-150 rounded-full shadow-lg"
+              className="inline-block px-10 py-4 text-base font-semibold text-blue-600 bg-white hover:bg-slate-50 transition-all duration-150 rounded-full"
             >
               Start Free Trial
             </Link>
@@ -291,8 +291,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer Message - Minimal */}
-      <section className="border-t border-slate-200 bg-white py-12">
+      {/* Footer Message */}
+      <section className="bg-white py-12">
         <div className="mx-auto max-w-4xl px-6 text-center">
           <p className="text-sm text-slate-400 font-light">
             <span className="font-normal text-slate-600">Corta is not a chatbot.</span>{" "}

@@ -74,63 +74,71 @@ export function SiteHeader() {
   }
 
   return (
-    <header className="border-b border-slate-200 bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/80">
-      <div className="mx-auto flex w-full max-w-6xl items-center px-6 py-4 relative">
-        {/* Left side: Logo + Nav */}
-        <div className="flex items-center gap-4">
-          <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
-            <span className="relative inline-flex h-8 w-8 items-center justify-center">
-              {/* Blue circle - base layer */}
+    <header className="bg-white">
+      <div className="mx-auto flex w-full max-w-6xl items-center px-6 py-5 relative">
+        {/* Left side: Logo */}
+        <div className="flex items-center">
+          <Link href="/" className="flex items-center gap-2 text-lg font-semibold text-slate-900">
+            <span className="relative inline-flex h-7 w-7 items-center justify-center">
               <span className="absolute inset-0 rounded-full bg-blue-600"></span>
-              {/* White circle on top - offset to the right to create crescent moon effect on the left */}
-              <span className="absolute left-2 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-white"></span>
+              <span className="absolute left-1.5 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-white"></span>
             </span>
             Corta.ai
           </Link>
         </div>
 
-        {/* Center: Toggle - absolutely centered */}
+        {/* Center: Toggle - J&J style pill toggle */}
         {pathname === "/" && (
-          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-1">
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center rounded-full bg-slate-100 p-1">
             <button
               onClick={() => handleAudienceToggle("devs")}
-              className={`rounded-md px-3 py-1.5 text-xs font-semibold transition whitespace-nowrap ${
+              className={`rounded-full px-5 py-2 text-sm font-semibold transition-all duration-200 ${
                 audience === "devs"
-                  ? "bg-blue-600 text-white"
-                  : "text-slate-600 hover:bg-slate-50"
+                  ? "bg-blue-600 text-white shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
               }`}
             >
-              Build
+              Developers
             </button>
+            <Link
+              href="/#stakeholders-section"
+              onClick={(e) => {
+                e.preventDefault();
+                handleAudienceToggle("stakeholders");
+              }}
+              className="flex items-center"
+            >
+              <div className="mx-2 h-4 w-px bg-slate-300"></div>
+            </Link>
             <button
               onClick={() => handleAudienceToggle("stakeholders")}
-              className={`rounded-md px-3 py-1.5 text-xs font-semibold transition whitespace-nowrap ${
+              className={`rounded-full px-5 py-2 text-sm font-semibold transition-all duration-200 ${
                 audience === "stakeholders"
-                  ? "bg-blue-600 text-white"
-                  : "text-slate-600 hover:bg-slate-50"
+                  ? "bg-slate-900 text-white shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
               }`}
             >
-              Make decisions
+              Leadership
             </button>
           </div>
         )}
 
         {/* Right side: Nav + Auth */}
-        <div className="flex items-center gap-4 text-sm font-medium text-slate-600 ml-auto">
-          <Link className={linkClass("/pricing")} href="/pricing">
+        <div className="flex items-center gap-6 text-sm font-medium text-slate-600 ml-auto">
+          <Link className="hover:text-slate-900 transition-colors" href="/pricing">
             Pricing
           </Link>
           {isAuthenticated ? (
             <>
               <Link
-                className="rounded-md border border-brand-200 bg-white px-3 py-1.5 text-brand-600 hover:border-brand-400"
+                className="hover:text-slate-900 transition-colors"
                 href="/dashboard"
               >
                 Dashboard
               </Link>
               <button
                 onClick={handleLogout}
-                className="rounded-md bg-brand-600 px-3 py-1.5 text-white shadow hover:bg-brand-700"
+                className="rounded-full bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
               >
                 Log out
               </button>
@@ -138,13 +146,13 @@ export function SiteHeader() {
           ) : (
             <>
               <Link
-                className="rounded-md border border-brand-200 bg-white px-3 py-1.5 text-brand-600 hover:border-brand-400"
+                className="hover:text-slate-900 transition-colors"
                 href="/login"
               >
-                Log in
+                Sign in
               </Link>
               <Link
-                className="rounded-md bg-brand-600 px-3 py-1.5 text-white shadow hover:bg-brand-700"
+                className="rounded-full bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
                 href="/register"
               >
                 Sign up
