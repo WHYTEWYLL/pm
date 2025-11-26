@@ -126,24 +126,29 @@ export function SiteHeader() {
 
         {/* Right side: Nav + Auth */}
         <div className="flex items-center gap-6 text-sm font-medium text-slate-600 ml-auto">
-          <Link className="hover:text-slate-900 transition-colors" href="/pricing">
-            Pricing
-          </Link>
-          {isAuthenticated ? (
+          {/* Hide Pricing and Dashboard links when on dashboard */}
+          {!pathname?.startsWith("/dashboard") && (
             <>
-              <Link
-                className="hover:text-slate-900 transition-colors"
-                href="/dashboard"
-              >
-                Dashboard
+              <Link className="hover:text-slate-900 transition-colors" href="/pricing">
+                Pricing
               </Link>
-              <button
-                onClick={handleLogout}
-                className="rounded-full bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
-              >
-                Log out
-              </button>
+              {isAuthenticated && (
+                <Link
+                  className="hover:text-slate-900 transition-colors"
+                  href="/dashboard"
+                >
+                  Dashboard
+                </Link>
+              )}
             </>
+          )}
+          {isAuthenticated ? (
+            <button
+              onClick={handleLogout}
+              className="rounded-full bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+            >
+              Log out
+            </button>
           ) : (
             <>
               <Link
