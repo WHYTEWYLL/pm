@@ -138,10 +138,10 @@ export default function StakeholderDashboardPage() {
           </div>
         )}
 
-        {/* This Week Summary */}
+        {/* Last 7 Days Summary */}
         <section className="mb-10">
           <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-400">
-            This Week
+            Last 7 Days
           </h2>
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="grid grid-cols-2 gap-6 md:grid-cols-4">

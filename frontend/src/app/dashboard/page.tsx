@@ -255,37 +255,45 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Integrations Section */}
+        {/* Last 7 Days - Metrics Section (Top) */}
         <section className="mb-10">
           <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-400">
-            Integrations
+            Last 7 Days
           </h2>
-          <div className="grid grid-cols-3 gap-4">
-            <IntegrationCard
-              name="Slack"
-              description="Read conversations"
-              icon={<Slack size={24} />}
-              connected={!!slackStatus.data?.connected}
-              loading={slackStatus.isLoading}
-              onConnect={() => connectMutation.mutate('slack')}
-            />
-            <IntegrationCard
-              name="Linear"
-              description="Manage tickets"
-              icon={<Trello size={24} />}
-              connected={!!linearStatus.data?.connected}
-              loading={linearStatus.isLoading}
-              onConnect={() => connectMutation.mutate('linear')}
-            />
-            <IntegrationCard
-              name="GitHub"
-              description="Track PRs & issues"
-              icon={<Github size={24} />}
-              connected={!!githubStatus.data?.connected}
-              loading={githubStatus.isLoading}
-              onConnect={() => connectMutation.mutate('github')}
-              badge="Scale"
-            />
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
+              <SummaryItem
+                icon={<CheckCircle2 size={20} className="text-emerald-500" />}
+                value={metrics.moved}
+                label="Tickets completed"
+              />
+              <SummaryItem
+                icon={<TrendingUp size={20} className="text-violet-500" />}
+                value={metrics.created}
+                label="New tickets"
+              />
+              <SummaryItem
+                icon={<MessageSquare size={20} className="text-blue-500" />}
+                value={metrics.linked}
+                label="Conversations tracked"
+              />
+              <SummaryItem
+                icon={<BarChart3 size={20} className="text-amber-500" />}
+                value={metrics.synced}
+                label="Messages synced"
+              />
+            </div>
+          </div>
+          {/* Activity Log Button */}
+          <div className="mt-4 flex justify-end">
+            <Link
+              href="/dashboard/activity"
+              className="group flex items-center gap-2 text-sm font-medium text-slate-500 transition-all hover:text-violet-600"
+            >
+              <Activity size={16} />
+              View Activity Log
+              <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+            </Link>
           </div>
         </section>
 
@@ -334,30 +342,39 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        {/* Metrics Section */}
+        {/* Integrations Section (Bottom) */}
         <section className="mb-10">
           <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-400">
-            Last 7 Days
+            Integrations
           </h2>
-          <div className="grid grid-cols-4 gap-4">
-            <MetricCard label="Synced" value={metrics.synced} color="slate" />
-            <MetricCard label="Linked" value={metrics.linked} color="violet" />
-            <MetricCard label="Moved" value={metrics.moved} color="amber" />
-            <MetricCard label="Created" value={metrics.created} color="emerald" />
+          <div className="grid grid-cols-3 gap-4">
+            <IntegrationCard
+              name="Slack"
+              description="Read conversations"
+              icon={<Slack size={24} />}
+              connected={!!slackStatus.data?.connected}
+              loading={slackStatus.isLoading}
+              onConnect={() => connectMutation.mutate('slack')}
+            />
+            <IntegrationCard
+              name="Linear"
+              description="Manage tickets"
+              icon={<Trello size={24} />}
+              connected={!!linearStatus.data?.connected}
+              loading={linearStatus.isLoading}
+              onConnect={() => connectMutation.mutate('linear')}
+            />
+            <IntegrationCard
+              name="GitHub"
+              description="Track PRs & issues"
+              icon={<Github size={24} />}
+              connected={!!githubStatus.data?.connected}
+              loading={githubStatus.isLoading}
+              onConnect={() => connectMutation.mutate('github')}
+              badge="Scale"
+            />
           </div>
         </section>
-
-        {/* Activity Log Button */}
-        <div className="flex justify-center">
-          <Link
-            href="/dashboard/activity"
-            className="group flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-medium text-slate-700 shadow-sm transition-all hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700 hover:shadow-md"
-          >
-            <Activity size={18} />
-            View Activity Log
-            <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
-          </Link>
-        </div>
       </main>
     </div>
   );
@@ -462,33 +479,12 @@ function WorkflowRow({
   );
 }
 
-function MetricCard({ 
-  label, 
-  value, 
-  color 
-}: { 
-  label: string; 
-  value: number;
-  color: 'slate' | 'violet' | 'amber' | 'emerald';
-}) {
-  const colorClasses = {
-    slate: 'bg-slate-50 border-slate-200',
-    violet: 'bg-violet-50 border-violet-200',
-    amber: 'bg-amber-50 border-amber-200',
-    emerald: 'bg-emerald-50 border-emerald-200',
-  };
-  
-  const textClasses = {
-    slate: 'text-slate-900',
-    violet: 'text-violet-900',
-    amber: 'text-amber-900',
-    emerald: 'text-emerald-900',
-  };
-
+function SummaryItem({ icon, value, label }: { icon: React.ReactNode; value: number; label: string }) {
   return (
-    <div className={`rounded-2xl border p-5 text-center ${colorClasses[color]}`}>
-      <p className={`text-3xl font-bold ${textClasses[color]}`}>{value}</p>
-      <p className="mt-1 text-sm font-medium text-slate-500">{label}</p>
+    <div className="text-center">
+      <div className="mb-2 flex justify-center">{icon}</div>
+      <p className="text-2xl font-bold text-slate-900">{value}</p>
+      <p className="text-sm text-slate-500">{label}</p>
     </div>
   );
 }
