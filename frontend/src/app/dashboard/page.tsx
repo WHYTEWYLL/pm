@@ -21,7 +21,10 @@ import {
   GitPullRequest,
   FileText,
   Send,
-  Activity
+  Activity,
+  TrendingUp,
+  MessageSquare,
+  BarChart3
 } from 'lucide-react';
 import { loadSession, AuthSession, fetchUserInfo, getCurrentView, setCurrentView, UserInfo } from '../../lib/auth';
 import { getSubscriptionStatus, SubscriptionStatus } from '../../lib/subscription';
