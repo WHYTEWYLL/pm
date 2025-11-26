@@ -130,7 +130,7 @@ def check_subscription(tenant_id: str) -> bool:
     
     # Default to True for development (allows local dev to work without subscription)
     if os.getenv("ENV") != "production":
-    return True
+        return True
     
     # In production, if tenant not found, deny access
     return False
