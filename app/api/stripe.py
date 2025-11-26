@@ -129,35 +129,35 @@ async def stripe_webhook(request: Request):
             if price_id in scale_price_ids:
                 tier = "scale"
 
-        # Update tenant subscription
-        db = TenantDatabase(tenant_id=tenant_id)
-        with db._conn() as conn:
-            if db.use_postgres:
-                cursor = conn.cursor()
-                cursor.execute(
-                    """
-                    UPDATE tenants 
-                    SET subscription_status = 'active',
+            # Update tenant subscription
+            db = TenantDatabase(tenant_id=tenant_id)
+            with db._conn() as conn:
+                if db.use_postgres:
+                    cursor = conn.cursor()
+                    cursor.execute(
+                        """
+                        UPDATE tenants 
+                        SET subscription_status = 'active',
                             subscription_tier = %s,
-                        stripe_customer_id = %s,
+                            stripe_customer_id = %s,
                             stripe_subscription_id = %s,
                             trial_ends_at = NULL
-                    WHERE id = %s
-                """,
+                        WHERE id = %s
+                    """,
                         [tier, customer_id, subscription_id, tenant_id],
-                )
-            else:
-                cursor = conn.cursor()
-                cursor.execute(
-                    """
-                    UPDATE tenants 
-                    SET subscription_status = 'active',
+                    )
+                else:
+                    cursor = conn.cursor()
+                    cursor.execute(
+                        """
+                        UPDATE tenants 
+                        SET subscription_status = 'active',
                             subscription_tier = ?,
-                        stripe_customer_id = ?,
+                            stripe_customer_id = ?,
                             stripe_subscription_id = ?,
                             trial_ends_at = NULL
-                    WHERE id = ?
-                """,
+                        WHERE id = ?
+                    """,
                         [tier, customer_id, subscription_id, tenant_id],
                     )
 
@@ -174,7 +174,7 @@ async def stripe_webhook(request: Request):
             )
             raise HTTPException(
                 status_code=500, detail=f"Error processing subscription: {str(e)}"
-                )
+            )
 
     elif event["type"] == "customer.subscription.deleted":
         subscription = event["data"]["object"]
