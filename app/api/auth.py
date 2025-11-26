@@ -18,13 +18,16 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 # Password hashing - use bcrypt directly to avoid passlib compatibility issues
 try:
     import bcrypt
+
     USE_BCRYPT_DIRECT = True
 except ImportError:
     USE_BCRYPT_DIRECT = False
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # JWT configuration
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", os.getenv("SECRET_KEY", "dev-secret-key-change-in-production"))
+SECRET_KEY = os.getenv(
+    "JWT_SECRET_KEY", os.getenv("SECRET_KEY", "dev-secret-key-change-in-production")
+)
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 30  # 30 days
 
@@ -97,11 +100,12 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against a hash."""
     if USE_BCRYPT_DIRECT:
         import bcrypt
+
         # Handle both bytes and string
         if isinstance(hashed_password, str):
-            hashed_password = hashed_password.encode('utf-8')
+            hashed_password = hashed_password.encode("utf-8")
         if isinstance(plain_password, str):
-            plain_password = plain_password.encode('utf-8')
+            plain_password = plain_password.encode("utf-8")
         return bcrypt.checkpw(plain_password, hashed_password)
     else:
         return pwd_context.verify(plain_password, hashed_password)
@@ -111,14 +115,15 @@ def get_password_hash(password: str) -> str:
     """Hash a password."""
     if USE_BCRYPT_DIRECT:
         import bcrypt
+
         # Ensure password is bytes
         if isinstance(password, str):
-            password = password.encode('utf-8')
+            password = password.encode("utf-8")
         # Generate salt and hash
         salt = bcrypt.gensalt()
         hashed = bcrypt.hashpw(password, salt)
         # Return as string
-        return hashed.decode('utf-8')
+        return hashed.decode("utf-8")
     else:
         return pwd_context.hash(password)
 
@@ -130,7 +135,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
         expire = datetime.now(timezone.utc) + expires_delta
     else:
         expire = datetime.now(timezone.utc) + timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
-    
+
     to_encode.update({"exp": expire, "iat": datetime.now(timezone.utc)})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -145,26 +150,30 @@ def verify_token(token: str) -> Optional[dict]:
         return None
 
 
-async def get_current_user(token: Optional[str] = Depends(oauth2_scheme)) -> Optional[dict]:
+async def get_current_user(
+    token: Optional[str] = Depends(oauth2_scheme),
+) -> Optional[dict]:
     """Get current user from JWT token."""
     if not token:
         return None
-    
+
     payload = verify_token(token)
     if not payload:
         return None
-    
+
     user_id = payload.get("sub")
     tenant_id = payload.get("tenant_id")
-    
+
     if not user_id:
         return None
-    
+
     return {"user_id": user_id, "tenant_id": tenant_id}
 
 
 # Routes
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED
+)
 async def register(user_data: UserRegistration):
     """
     Register a new user.
@@ -172,8 +181,9 @@ async def register(user_data: UserRegistration):
     """
     # Import here to avoid circular dependency
     from ..storage.tenant_db import TenantDatabase
+
     db = TenantDatabase(tenant_id=None)  # No tenant context for admin operations
-    
+
     # Check if user already exists
     with db._conn() as conn:
         if db.use_postgres:
@@ -182,29 +192,29 @@ async def register(user_data: UserRegistration):
         else:
             cursor = conn.cursor()
             cursor.execute("SELECT id FROM users WHERE email = ?", [user_data.email])
-        
+
         existing = cursor.fetchone()
         if existing:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered"
+                detail="Email already registered",
             )
-    
+
     # Generate user ID and verification token
     user_id = str(uuid.uuid4())
     verification_token = secrets.token_urlsafe(32)
     verification_expires = datetime.now(timezone.utc) + timedelta(days=7)
-    
+
     # Hash password
     password_hash = get_password_hash(user_data.password)
-    
+
     # Create tenant for the user
     tenant_id = str(uuid.uuid4())
     tenant_email = user_data.email
-    
+
     # Set trial expiration to 7 days from now
     trial_ends_at = datetime.now(timezone.utc) + timedelta(days=7)
-    
+
     # Insert tenant first (to satisfy FK) then user
     with db._conn() as conn:
         if db.use_postgres:
@@ -239,7 +249,14 @@ async def register(user_data: UserRegistration):
                 INSERT INTO tenants (id, email, subscription_status, subscription_tier, trial_ends_at, owner_user_id)
                 VALUES (?, ?, ?, ?, ?, ?)
                 """,
-                [tenant_id, tenant_email, "trial", "free", trial_ends_at.isoformat(), user_id],
+                [
+                    tenant_id,
+                    tenant_email,
+                    "trial",
+                    "free",
+                    trial_ends_at.isoformat(),
+                    user_id,
+                ],
             )
 
             cursor.execute(
@@ -257,10 +274,10 @@ async def register(user_data: UserRegistration):
                     tenant_id,
                 ],
             )
-    
+
     # TODO: Send verification email
     # For now, we'll return the verification token in the response (remove in production)
-    
+
     return UserResponse(
         id=user_id,
         email=user_data.email,
@@ -277,7 +294,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     Uses email as username.
     """
     db = TenantDatabase(tenant_id=None)
-    
+
     # Get user by email
     with db._conn() as conn:
         if db.use_postgres:
@@ -292,16 +309,16 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
                 "SELECT id, password_hash, tenant_id, email_verified FROM users WHERE email = ?",
                 [form_data.username],
             )
-        
+
         row = cursor.fetchone()
-    
+
     if not row:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     if db.use_postgres:
         user_id, password_hash, tenant_id, email_verified = row
     else:
@@ -309,7 +326,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         password_hash = row["password_hash"]
         tenant_id = row["tenant_id"]
         email_verified = bool(row["email_verified"])
-    
+
     # Verify password
     if not verify_password(form_data.password, password_hash):
         raise HTTPException(
@@ -317,19 +334,19 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     # Check if email is verified (optional enforcement)
     # if not email_verified:
     #     raise HTTPException(
     #         status_code=status.HTTP_403_FORBIDDEN,
     #         detail="Email not verified"
     #     )
-    
+
     # Create access token
     access_token = create_access_token(
         data={"sub": user_id, "tenant_id": tenant_id or ""}
     )
-    
+
     return Token(
         access_token=access_token,
         token_type="bearer",
@@ -342,7 +359,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 async def verify_email(token: str):
     """Verify user email address."""
     db = TenantDatabase(tenant_id=None)
-    
+
     # Find user by verification token
     with db._conn() as conn:
         if db.use_postgres:
@@ -363,30 +380,32 @@ async def verify_email(token: str):
                 """,
                 [token],
             )
-        
+
         row = cursor.fetchone()
-    
+
     if not row:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid verification token"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid verification token"
         )
-    
+
     if db.use_postgres:
         user_id, expires = row
         expires_dt = expires
     else:
         user_id = row["id"]
         expires_str = row["email_verification_expires"]
-        expires_dt = datetime.fromisoformat(expires_str.replace("Z", "+00:00")) if expires_str else None
-    
+        expires_dt = (
+            datetime.fromisoformat(expires_str.replace("Z", "+00:00"))
+            if expires_str
+            else None
+        )
+
     # Check if token expired
     if expires_dt and datetime.now(timezone.utc) > expires_dt:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Verification token expired"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Verification token expired"
         )
-    
+
     # Mark email as verified
     with db._conn() as conn:
         if db.use_postgres:
@@ -413,7 +432,7 @@ async def verify_email(token: str):
                 """,
                 [user_id],
             )
-    
+
     return {"message": "Email verified successfully"}
 
 
@@ -421,7 +440,7 @@ async def verify_email(token: str):
 async def forgot_password(request: PasswordResetRequest):
     """Send password reset email."""
     db = TenantDatabase(tenant_id=None)
-    
+
     # Find user by email
     with db._conn() as conn:
         if db.use_postgres:
@@ -430,19 +449,19 @@ async def forgot_password(request: PasswordResetRequest):
         else:
             cursor = conn.cursor()
             cursor.execute("SELECT id FROM users WHERE email = ?", [request.email])
-        
+
         row = cursor.fetchone()
-    
+
     # Don't reveal if email exists (security best practice)
     if not row:
         return {"message": "If the email exists, a password reset link has been sent"}
-    
+
     user_id = row[0] if db.use_postgres else row["id"]
-    
+
     # Generate reset token
     reset_token = secrets.token_urlsafe(32)
     reset_expires = datetime.now(timezone.utc) + timedelta(hours=1)
-    
+
     # Store reset token
     with db._conn() as conn:
         if db.use_postgres:
@@ -465,20 +484,23 @@ async def forgot_password(request: PasswordResetRequest):
                 """,
                 [reset_token, reset_expires.isoformat(), user_id],
             )
-    
+
     # TODO: Send password reset email
     # For now, we'll return the token (remove in production)
     frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
     reset_url = f"{frontend_url}/reset-password?token={reset_token}"
-    
-    return {"message": "If the email exists, a password reset link has been sent", "reset_url": reset_url}
+
+    return {
+        "message": "If the email exists, a password reset link has been sent",
+        "reset_url": reset_url,
+    }
 
 
 @router.post("/reset-password")
 async def reset_password(request: PasswordReset):
     """Reset password with token."""
     db = TenantDatabase(tenant_id=None)
-    
+
     # Find user by reset token
     with db._conn() as conn:
         if db.use_postgres:
@@ -499,33 +521,35 @@ async def reset_password(request: PasswordReset):
                 """,
                 [request.token],
             )
-        
+
         row = cursor.fetchone()
-    
+
     if not row:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid reset token"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid reset token"
         )
-    
+
     if db.use_postgres:
         user_id, expires = row
         expires_dt = expires
     else:
         user_id = row["id"]
         expires_str = row["password_reset_expires"]
-        expires_dt = datetime.fromisoformat(expires_str.replace("Z", "+00:00")) if expires_str else None
-    
+        expires_dt = (
+            datetime.fromisoformat(expires_str.replace("Z", "+00:00"))
+            if expires_str
+            else None
+        )
+
     # Check if token expired
     if expires_dt and datetime.now(timezone.utc) > expires_dt:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Reset token expired"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Reset token expired"
         )
-    
+
     # Update password
     password_hash = get_password_hash(request.new_password)
-    
+
     with db._conn() as conn:
         if db.use_postgres:
             cursor = conn.cursor()
@@ -551,7 +575,7 @@ async def reset_password(request: PasswordReset):
                 """,
                 [password_hash, user_id],
             )
-    
+
     return {"message": "Password reset successfully"}
 
 
@@ -560,13 +584,12 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
     """Get current user information."""
     if not current_user:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
         )
-    
+
     user_id = current_user["user_id"]
     db = TenantDatabase(tenant_id=None)
-    
+
     with db._conn() as conn:
         if db.use_postgres:
             cursor = conn.cursor()
@@ -583,7 +606,17 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
             )
             row = cursor.fetchone()
             if row:
-                user_id, email, full_name, email_verified, tenant_id, default_view, permission, onboarding_completed, owner_id = row
+                (
+                    user_id,
+                    email,
+                    full_name,
+                    email_verified,
+                    tenant_id,
+                    default_view,
+                    permission,
+                    onboarding_completed,
+                    owner_id,
+                ) = row
                 is_owner = owner_id == user_id
         else:
             cursor = conn.cursor()
@@ -598,7 +631,7 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
                    WHERE u.id = ?""",
                 [user_id],
             )
-        row = cursor.fetchone()
+            row = cursor.fetchone()
             if row:
                 user_id = row["id"]
                 email = row["email"]
@@ -609,13 +642,12 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
                 permission = row["permission"] or "admin"
                 onboarding_completed = bool(row["onboarding_completed"])
                 is_owner = row["owner_user_id"] == user_id
-    
+
     if not row:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
-    
+
     return UserResponse(
         id=user_id,
         email=email,
@@ -631,19 +663,20 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
 
 @router.put("/me/view")
 async def update_user_view(
-    data: UpdateUserView,
-    current_user: dict = Depends(get_current_user)
+    data: UpdateUserView, current_user: dict = Depends(get_current_user)
 ):
     """Update user's default view preference."""
     if not current_user:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    
+
     if data.default_view not in ("dev", "stakeholder"):
-        raise HTTPException(status_code=400, detail="Invalid view. Must be 'dev' or 'stakeholder'")
-    
+        raise HTTPException(
+            status_code=400, detail="Invalid view. Must be 'dev' or 'stakeholder'"
+        )
+
     user_id = current_user["user_id"]
     db = TenantDatabase(tenant_id=None)
-    
+
     with db._conn() as conn:
         cursor = conn.cursor()
         if db.use_postgres:
@@ -656,25 +689,26 @@ async def update_user_view(
                 "UPDATE users SET default_view = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
                 [data.default_view, user_id],
             )
-    
+
     return {"status": "updated", "default_view": data.default_view}
 
 
 @router.post("/me/onboarding")
 async def complete_onboarding(
-    data: UpdateOnboarding,
-    current_user: dict = Depends(get_current_user)
+    data: UpdateOnboarding, current_user: dict = Depends(get_current_user)
 ):
     """Complete user onboarding with role selection."""
     if not current_user:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    
+
     if data.default_view not in ("dev", "stakeholder"):
-        raise HTTPException(status_code=400, detail="Invalid view. Must be 'dev' or 'stakeholder'")
-    
+        raise HTTPException(
+            status_code=400, detail="Invalid view. Must be 'dev' or 'stakeholder'"
+        )
+
     user_id = current_user["user_id"]
     db = TenantDatabase(tenant_id=None)
-    
+
     with db._conn() as conn:
         cursor = conn.cursor()
         if db.use_postgres:
@@ -691,6 +725,5 @@ async def complete_onboarding(
                    WHERE id = ?""",
                 [data.default_view, user_id],
             )
-    
-    return {"status": "completed", "default_view": data.default_view}
 
+    return {"status": "completed", "default_view": data.default_view}
