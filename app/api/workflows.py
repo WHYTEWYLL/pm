@@ -318,7 +318,7 @@ async def get_standup(
     team_id = config.get("linear_team_id") if config else None
 
     # Import and call the actual standup workflow
-    from ..workflows.dev.standup import generate_standup
+    from ..workflows.standup import generate_standup
 
     # Temporarily set credentials for the workflow
     original_linear_key = os.getenv("LINEAR_API_KEY")
@@ -401,7 +401,7 @@ async def publish_standup_endpoint(
     config = db_tenant.get_tenant_config()
     team_id = config.get("linear_team_id") if config else None
 
-    from ..workflows.dev.standup import publish_standup
+    from ..workflows.standup import publish_standup
 
     # Temporarily set credentials for the workflow
     original_linear_key = os.getenv("LINEAR_API_KEY")
@@ -455,7 +455,7 @@ async def send_standup_dm_endpoint(
     config = db_tenant.get_tenant_config()
     team_id = config.get("linear_team_id") if config else None
 
-    from ..workflows.dev.standup import send_standup_dm
+    from ..workflows.standup import send_standup_dm
 
     # Set credentials
     original_linear_key = os.getenv("LINEAR_API_KEY")
@@ -548,7 +548,7 @@ async def move_tickets(
     team_id = config.get("linear_team_id") if config else None
 
     # Import and call the actual move_tickets workflow
-    from ..workflows.dev.move_tickets import process_ticket_status_changes
+    from ..workflows.move_tickets import process_ticket_status_changes
 
     # Set credentials
     original_linear_key = os.getenv("LINEAR_API_KEY")

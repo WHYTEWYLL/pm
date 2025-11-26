@@ -407,34 +407,11 @@ if __name__ == "__main__":
     # Allow running this file directly for ingestion
     import sys
 
-    # Optionally use dev config if available
-    target_channel_ids = None
-    try:
-        # Try absolute import first (when running as module)
-        from app.workflows.dev.config import SLACK_TARGET_CHANNEL_IDS
-
-        target_channel_ids = SLACK_TARGET_CHANNEL_IDS
-    except ImportError:
-        try:
-            # Try relative import (when running as script)
-            from ...workflows.dev.config import SLACK_TARGET_CHANNEL_IDS
-
-            target_channel_ids = SLACK_TARGET_CHANNEL_IDS
-        except ImportError:
-            # Dev config not available, use general behavior
-            pass
-
-    # When using dev config, include threads by default
-    include_threads = "--threads" in sys.argv or target_channel_ids is not None
+    include_threads = "--threads" in sys.argv
 
     print("🔄 Running Slack ingestion...")
-    if target_channel_ids:
-        print(f"📋 Using dev config: {len(target_channel_ids)} target channels")
-        print(f"🧵 Including threads: {include_threads}")
-        print(f"⏰ Fetching last 24h from target channels")
-    result = run_ingestion(
-        include_threads=include_threads, target_channel_ids=target_channel_ids
-    )
+    print(f"🧵 Including threads: {include_threads}")
+    result = run_ingestion(include_threads=include_threads)
 
     mode_emoji = {
         "initial": "📥 Initial",

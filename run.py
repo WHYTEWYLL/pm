@@ -32,18 +32,7 @@ Or run modules directly:
     if command == "sync":
         from app.ingestion.slack import run_ingestion
 
-        # Use dev config channel IDs if available
-        target_channel_ids = None
-        try:
-            from app.workflows.dev.config import SLACK_TARGET_CHANNEL_IDS
-
-            target_channel_ids = SLACK_TARGET_CHANNEL_IDS
-        except ImportError:
-            pass
-
-        result = run_ingestion(
-            include_threads="--threads" in args, target_channel_ids=target_channel_ids
-        )
+        result = run_ingestion(include_threads="--threads" in args)
         mode = "🔄 Incremental" if result["mode"] == "incremental" else "📥 Initial"
         print(f"\n{mode}")
         print(f"✓ Fetched: {result['fetched']}")

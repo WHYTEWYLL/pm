@@ -76,10 +76,20 @@ When a user registers:
 
 ### 6. Background Jobs
 
-#### Daily Trial Expiration (`expire_trials`)
-- Runs daily at midnight UTC
-- Finds all tenants with expired trials
-- Updates status to `expired` and tier to `free`
+#### Data Sync (Hourly & Daily)
+- Runs hourly and daily for all active tenants
+- Syncs Slack messages, Linear tickets, and GitHub (Scale tier)
+- Located in `app/jobs/sync.py`
+
+#### Morning Standups
+- Runs daily at 9 AM UTC
+- Sends standup DMs to developers with `daily_standup` enabled
+- Located in `app/jobs/scheduled_workflows.py`
+
+#### Trial Expiration
+- **No background job needed** - trial access is checked at runtime
+- `check_subscription()` compares `trial_ends_at` timestamp against current time
+- Expired trials are automatically denied access without needing status updates
 
 #### Daily Ingestion
 - Only runs for tenants with:

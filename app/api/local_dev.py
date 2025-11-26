@@ -75,11 +75,9 @@ async def setup_local_tenant(tenant_id: str = "local-dev-tenant"):
             scopes="local-dev",
         )
     
-    # Setup config
-    from ..workflows.dev.config import SLACK_TARGET_CHANNEL_IDS
-    
+    # Setup config (channel IDs should be configured via tenant settings)
     config = {
-        "slack_target_channel_ids": SLACK_TARGET_CHANNEL_IDS,
+        "slack_target_channel_ids": [],
         "linear_team_id": settings.linear_team_id,
         "github_orgs": [],
         "workflow_settings": {},

@@ -1,4 +1,4 @@
-"""Background jobs for scheduled ingestion."""
+"""Data sync tasks for Slack, Linear, and GitHub."""
 
 import json
 import logging
@@ -6,9 +6,8 @@ import os
 import uuid
 from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Any
-from celery import Celery
-from celery.schedules import crontab
 
+from .celery import celery_app
 from ..storage.tenant_db import TenantDatabase
 from ..storage.encryption import decrypt_token
 from ..ingestion.slack import SlackService
@@ -16,20 +15,7 @@ from ..ingestion.linear import LinearClient
 from ..ingestion.github import GitHubClient
 from ..storage.db import Database
 
-logger = logging.getLogger("jobs.ingestion")
-
-# Initialize Celery
-redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-celery_app = Celery("pm_assistant", broker=redis_url, backend=redis_url)
-
-# Configure Celery
-celery_app.conf.update(
-    task_serializer="json",
-    accept_content=["json"],
-    result_serializer="json",
-    timezone="UTC",
-    enable_utc=True,
-)
+logger = logging.getLogger("jobs.sync")
 
 
 # --- Helper Functions ---
@@ -165,7 +151,7 @@ def get_tenant_tier(tenant_id: str) -> str:
             return row[0] if isinstance(row, tuple) else row.get("subscription_tier", "free") if row else "free"
 
 
-# --- Ingestion Tasks ---
+# --- Sync Tasks ---
 
 @celery_app.task(bind=True, max_retries=3)
 def ingest_slack_for_tenant(self, tenant_id: str):
@@ -379,8 +365,8 @@ def hourly_sync_for_all_tenants():
 
 
 @celery_app.task
-def daily_ingestion_for_all_tenants():
-    """Run daily ingestion for all active tenants (full sync)."""
+def daily_sync_for_all_tenants():
+    """Run daily sync for all active tenants (full sync)."""
     tenant_ids = get_active_tenants()
     
     scheduled = 0
@@ -391,234 +377,6 @@ def daily_ingestion_for_all_tenants():
         ingest_github_for_tenant.delay(tenant_id)
         scheduled += 1
     
-    logger.info(f"Daily ingestion scheduled for {scheduled} tenants")
+    logger.info(f"Daily sync scheduled for {scheduled} tenants")
     return {"status": "scheduled", "tenants": scheduled}
 
-
-@celery_app.task
-def expire_trials():
-    """Expire trials that have passed their end date."""
-    db = TenantDatabase(tenant_id=None)
-    expired_count = 0
-    
-    with db._conn() as conn:
-        if db.use_postgres:
-            cursor = conn.cursor()
-            cursor.execute(
-                """
-                SELECT id FROM tenants 
-                WHERE subscription_status = 'trial'
-                AND trial_ends_at IS NOT NULL
-                AND trial_ends_at < %s
-                """,
-                [datetime.now(timezone.utc)],
-            )
-            expired_tenant_ids = [row[0] for row in cursor.fetchall()]
-            
-            if expired_tenant_ids:
-                for tenant_id in expired_tenant_ids:
-                    cursor.execute(
-                        """
-                        UPDATE tenants 
-                        SET subscription_status = 'expired',
-                            subscription_tier = 'free'
-                        WHERE id = %s
-                        """,
-                        [tenant_id],
-                    )
-                expired_count = len(expired_tenant_ids)
-        else:
-            cursor = conn.cursor()
-            now = datetime.now(timezone.utc).isoformat()
-            cursor.execute(
-                """
-                SELECT id FROM tenants 
-                WHERE subscription_status = 'trial'
-                AND trial_ends_at IS NOT NULL
-                AND trial_ends_at < ?
-                """,
-                [now],
-            )
-            expired_tenant_ids = [row[0] if isinstance(row, tuple) else row["id"] for row in cursor.fetchall()]
-            
-            if expired_tenant_ids:
-                for tenant_id in expired_tenant_ids:
-                    cursor.execute(
-                        """
-                        UPDATE tenants 
-                        SET subscription_status = 'expired',
-                            subscription_tier = 'free'
-                        WHERE id = ?
-                        """,
-                        [tenant_id],
-                    )
-                expired_count = len(expired_tenant_ids)
-    
-    logger.info(f"Expired {expired_count} trials")
-    return {"status": "success", "expired_count": expired_count}
-
-
-# --- Standup Tasks ---
-
-def get_tenant_dev_users(tenant_id: str) -> List[Dict[str, Any]]:
-    """Get all developer users for a tenant (users with dev view)."""
-    db = TenantDatabase(tenant_id=tenant_id)
-    
-    with db._conn() as conn:
-        if db.use_postgres:
-            cursor = conn.cursor()
-            cursor.execute(
-                """
-                SELECT id, email, full_name, default_view
-                FROM users 
-                WHERE tenant_id = %s
-                AND default_view = 'dev'
-                """,
-                [tenant_id],
-            )
-            columns = ["id", "email", "full_name", "default_view"]
-            return [dict(zip(columns, row)) for row in cursor.fetchall()]
-        else:
-            cursor = conn.cursor()
-            cursor.execute(
-                """
-                SELECT id, email, full_name, default_view
-                FROM users 
-                WHERE tenant_id = ?
-                AND default_view = 'dev'
-                """,
-                [tenant_id],
-            )
-            rows = cursor.fetchall()
-            if rows and isinstance(rows[0], tuple):
-                columns = ["id", "email", "full_name", "default_view"]
-                return [dict(zip(columns, row)) for row in rows]
-            return [dict(row) for row in rows]
-
-
-@celery_app.task(bind=True, max_retries=2)
-def send_standup_dm_for_user(self, tenant_id: str, user_email: str):
-    """Send daily standup DM to a specific user."""
-    try:
-        db = TenantDatabase(tenant_id=tenant_id)
-        
-        # Check Slack connection
-        slack_creds = db.get_oauth_credentials("slack")
-        if not slack_creds:
-            return {"status": "skipped", "reason": "Slack not connected"}
-        
-        # Check Linear connection
-        linear_creds = db.get_oauth_credentials("linear")
-        if not linear_creds:
-            return {"status": "skipped", "reason": "Linear not connected"}
-        
-        # Set tenant context
-        os.environ["CURRENT_TENANT_ID"] = tenant_id
-        
-        # Decrypt tokens
-        slack_token = decrypt_token(slack_creds["access_token"])
-        linear_token = decrypt_token(linear_creds["access_token"])
-        
-        # Get config for Linear team
-        config = db.get_tenant_config()
-        team_id = config.get("linear_team_id") if config else None
-        
-        # Import and send standup DM
-        from ..workflows.dev.standup import send_standup_dm
-        
-        result = send_standup_dm(
-            user_email=user_email,
-            slack_token=slack_token,
-            linear_api_key=linear_token,
-            linear_team_id=team_id,
-        )
-        
-        if result.get("status") == "success":
-            # Log activity
-            log_activity(
-                tenant_id,
-                "post",
-                f"Sent morning reminder to {user_email}",
-                {"user_email": user_email, "in_progress": result.get("in_progress", 0)}
-            )
-        
-        logger.info(f"Standup DM sent to {user_email} for tenant {tenant_id}")
-        return result
-        
-    except Exception as e:
-        logger.exception(f"Failed to send standup DM to {user_email} for tenant {tenant_id}")
-        raise self.retry(exc=e, countdown=300)  # Retry after 5 minutes
-
-
-@celery_app.task(bind=True, max_retries=2)
-def send_standups_for_tenant(self, tenant_id: str):
-    """Send daily standups to all dev users in a tenant."""
-    try:
-        # Check workflow settings
-        settings = get_workflow_settings(tenant_id)
-        if not settings.get("daily_standup", False):
-            logger.info(f"Skipping standups for tenant {tenant_id} - daily_standup disabled")
-            return {"status": "skipped", "reason": "daily_standup disabled"}
-        
-        # Get all dev users for this tenant
-        dev_users = get_tenant_dev_users(tenant_id)
-        
-        if not dev_users:
-            return {"status": "skipped", "reason": "No dev users found"}
-        
-        # Queue standup DM for each dev user
-        scheduled = 0
-        for user in dev_users:
-            user_email = user.get("email")
-            if user_email:
-                send_standup_dm_for_user.delay(tenant_id, user_email)
-                scheduled += 1
-        
-        logger.info(f"Scheduled standups for {scheduled} devs in tenant {tenant_id}")
-        return {"status": "scheduled", "users": scheduled}
-        
-    except Exception as e:
-        logger.exception(f"Failed to schedule standups for tenant {tenant_id}")
-        raise self.retry(exc=e, countdown=300)
-
-
-@celery_app.task
-def send_morning_standups_for_all_tenants():
-    """Send morning standup DMs for all active tenants with the feature enabled."""
-    tenant_ids = get_active_tenants()
-    
-    scheduled = 0
-    for tenant_id in tenant_ids:
-        settings = get_workflow_settings(tenant_id)
-        if settings.get("daily_standup", False):
-            send_standups_for_tenant.delay(tenant_id)
-            scheduled += 1
-    
-    logger.info(f"Morning standups scheduled for {scheduled} tenants")
-    return {"status": "scheduled", "tenants": scheduled}
-
-
-# --- Schedule Configuration ---
-
-celery_app.conf.beat_schedule = {
-    # Hourly sync for all tenants
-    "hourly-sync": {
-        "task": "app.jobs.ingestion.hourly_sync_for_all_tenants",
-        "schedule": crontab(minute=0),  # Every hour at :00
-    },
-    # Daily full sync at 6 AM UTC
-    "daily-ingestion": {
-        "task": "app.jobs.ingestion.daily_ingestion_for_all_tenants",
-        "schedule": crontab(hour=6, minute=0),
-    },
-    # Morning standups at 9 AM UTC (start of workday)
-    "morning-standups": {
-        "task": "app.jobs.ingestion.send_morning_standups_for_all_tenants",
-        "schedule": crontab(hour=9, minute=0),
-    },
-    # Expire trials at midnight UTC
-    "expire-trials": {
-        "task": "app.jobs.ingestion.expire_trials",
-        "schedule": crontab(hour=0, minute=0),
-    },
-}

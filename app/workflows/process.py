@@ -6,7 +6,7 @@ from typing import Dict, Any
 
 from ..storage.db import Database
 from ..ingestion.linear import LinearClient
-from ..ai.analyzer import MessageAnalyzer
+from .ai.analyzer import MessageAnalyzer
 
 
 ISSUE_KEY_RE = re.compile(r"\b([A-Z]{2,}-\d+)\b")
