@@ -98,7 +98,7 @@ export function SiteHeader() {
                   : "text-slate-500 hover:text-slate-700"
               }`}
             >
-              Developers
+              Build
             </button>
             <Link
               href="/#stakeholders-section"
@@ -118,7 +118,7 @@ export function SiteHeader() {
                   : "text-slate-500 hover:text-slate-700"
               }`}
             >
-              Leadership
+              Make decisions
             </button>
           </div>
         )}

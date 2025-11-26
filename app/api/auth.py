@@ -598,7 +598,7 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
                    WHERE u.id = ?""",
                 [user_id],
             )
-            row = cursor.fetchone()
+        row = cursor.fetchone()
             if row:
                 user_id = row["id"]
                 email = row["email"]

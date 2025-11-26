@@ -114,6 +114,44 @@ class SlackService:
             kwargs["blocks"] = blocks
         return self._safe_call("chat_postMessage", **kwargs)
 
+    def open_dm(self, user_id: str) -> str:
+        """Open a DM conversation with a user and return the channel ID."""
+        resp = self._safe_call("conversations_open", users=user_id)
+        return resp.get("channel", {}).get("id")
+
+    def send_dm(
+        self, user_id: str, text: str, blocks: Optional[List[Dict]] = None
+    ) -> Dict[str, Any]:
+        """Send a direct message to a user."""
+        dm_channel = self.open_dm(user_id)
+        return self.send_message(dm_channel, text, blocks)
+
+    def list_users(self) -> List[Dict[str, Any]]:
+        """List all users in the workspace."""
+        all_users: List[Dict[str, Any]] = []
+        cursor = None
+        while True:
+            kwargs: Dict[str, Any] = {"limit": 200}
+            if cursor:
+                kwargs["cursor"] = cursor
+            resp = self._safe_call("users_list", **kwargs)
+            users = resp.get("members", [])
+            all_users.extend(users)
+            cursor = resp.get("response_metadata", {}).get("next_cursor") or None
+            if not cursor:
+                break
+        return all_users
+
+    def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
+        """Get a Slack user by their email address."""
+        try:
+            resp = self._safe_call("users_lookupByEmail", email=email)
+            return resp.get("user")
+        except SlackApiError as e:
+            if e.response.get("error") == "users_not_found":
+                return None
+            raise
+
     # To do: Change this.
     # We should fetch messages from the last 24h, load it in the databases and then filter which ones are relevant to the user.
     # once we have the messages, get the thread replies and add them to the messages.

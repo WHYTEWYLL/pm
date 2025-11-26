@@ -81,12 +81,12 @@ export default function DashboardPage() {
   // --- Auth & Effects ---
   useEffect(() => {
     async function checkAuth() {
-      const existing = loadSession();
-      if (!existing) {
-        router.replace('/login');
-        return;
-      }
-      setSession(existing);
+    const existing = loadSession();
+    if (!existing) {
+      router.replace('/login');
+      return;
+    }
+    setSession(existing);
 
       // Fetch user info to check onboarding and view
       const user = await fetchUserInfo();
@@ -228,7 +228,7 @@ export default function DashboardPage() {
         <div className="mb-6 flex items-center gap-3">
           <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-violet-700">
             Dev View
-          </span>
+              </span>
           {userInfo?.is_owner && (
             <Link
               href="/dashboard/stakeholder"
@@ -283,7 +283,7 @@ export default function DashboardPage() {
                 label="Messages synced"
               />
             </div>
-          </div>
+                  </div>
           {/* Activity Log Button */}
           <div className="mt-4 flex justify-end">
             <Link
@@ -338,8 +338,8 @@ export default function DashboardPage() {
               enabled={workflows.create_tickets}
               onToggle={() => toggleWorkflow('create_tickets')}
               isLast
-            />
-          </div>
+                />
+              </div>
         </section>
 
         {/* Integrations Section (Bottom) */}
@@ -349,30 +349,30 @@ export default function DashboardPage() {
           </h2>
           <div className="grid grid-cols-3 gap-4">
             <IntegrationCard
-              name="Slack"
+                  name="Slack" 
               description="Read conversations"
               icon={<Slack size={24} />}
-              connected={!!slackStatus.data?.connected}
+                  connected={!!slackStatus.data?.connected} 
               loading={slackStatus.isLoading}
-              onConnect={() => connectMutation.mutate('slack')}
-            />
+                  onConnect={() => connectMutation.mutate('slack')}
+                />
             <IntegrationCard
-              name="Linear"
+                  name="Linear" 
               description="Manage tickets"
               icon={<Trello size={24} />}
-              connected={!!linearStatus.data?.connected}
+                  connected={!!linearStatus.data?.connected} 
               loading={linearStatus.isLoading}
-              onConnect={() => connectMutation.mutate('linear')}
-            />
+                  onConnect={() => connectMutation.mutate('linear')}
+                />
             <IntegrationCard
-              name="GitHub"
+                  name="GitHub" 
               description="Track PRs & issues"
               icon={<Github size={24} />}
-              connected={!!githubStatus.data?.connected}
+                  connected={!!githubStatus.data?.connected} 
               loading={githubStatus.isLoading}
-              onConnect={() => connectMutation.mutate('github')}
+                  onConnect={() => connectMutation.mutate('github')}
               badge="Scale"
-            />
+                />
           </div>
         </section>
       </main>
@@ -426,7 +426,7 @@ function IntegrationCard({
           Connected
         </div>
       ) : (
-        <button
+        <button 
           onClick={onConnect}
           className="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800"
         >
