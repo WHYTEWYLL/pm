@@ -83,7 +83,7 @@ except Exception:
 
 @app.get("/")
 async def root():
-    return {"message": "PM Assistant API", "version": "1.0.1"}
+    return {"message": "PM Assistant API", "version": "1.0.0"}
 
 
 @app.get("/health")
