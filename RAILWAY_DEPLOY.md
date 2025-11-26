@@ -3,6 +3,7 @@
 ## 🎯 Architecture Overview
 
 **How it works:**
+
 1. Users sign up → Create account
 2. Users connect services → OAuth flows (Slack, Linear, GitHub)
 3. Backend runs workflows → Automatically for all users
@@ -62,6 +63,7 @@ railway domain
 ### Option 2: GitHub Integration (Easiest)
 
 1. **Push to GitHub:**
+
    ```bash
    git add .
    git commit -m "Initial commit"
@@ -70,16 +72,19 @@ railway domain
    ```
 
 2. **Connect to Railway:**
+
    - Go to https://railway.app
    - Click "New Project" → "Deploy from GitHub repo"
    - Select your repository
    - Railway auto-detects Python
 
 3. **Add Services:**
+
    - Click "New" → "Database" → "PostgreSQL"
    - Click "New" → "Database" → "Redis"
 
 4. **Set Environment Variables:**
+
    - Go to your service → "Variables" tab
    - Add all variables (see checklist below)
 
@@ -134,6 +139,7 @@ Before deploying, set up OAuth apps. Railway will give you a URL like `https://y
 Set these in Railway dashboard (Variables tab):
 
 **Core:**
+
 - `ENV=production`
 - `SECRET_KEY` (generate: `openssl rand -hex 32`)
 - `JWT_SECRET_KEY` (can be same as SECRET_KEY)
@@ -141,6 +147,7 @@ Set these in Railway dashboard (Variables tab):
 - `OPENAI_API_KEY`
 
 **OAuth:**
+
 - `SLACK_CLIENT_ID`
 - `SLACK_CLIENT_SECRET`
 - `LINEAR_CLIENT_ID`
@@ -149,11 +156,13 @@ Set these in Railway dashboard (Variables tab):
 - `GITHUB_CLIENT_SECRET`
 
 **Auto-set by Railway:**
+
 - `DATABASE_URL` (from PostgreSQL)
 - `REDIS_URL` (from Redis)
 - `PORT` (Railway sets this)
 
 **Optional:**
+
 - `FRONTEND_URL` (if you have a frontend)
 - `SENDGRID_API_KEY` (for email verification)
 - `FROM_EMAIL`
@@ -165,6 +174,7 @@ Set these in Railway dashboard (Variables tab):
 ### User Flow:
 
 1. **User visits your app** → Registers account
+
    ```
    POST /api/auth/register
    {
@@ -175,12 +185,14 @@ Set these in Railway dashboard (Variables tab):
    ```
 
 2. **User logs in** → Gets JWT token
+
    ```
    POST /api/auth/login
    Returns: { "access_token": "...", "tenant_id": "..." }
    ```
 
 3. **User connects Slack** → OAuth flow
+
    ```
    GET /api/oauth/slack/authorize?redirect_uri=...
    → User authorizes in Slack
@@ -189,6 +201,7 @@ Set these in Railway dashboard (Variables tab):
    ```
 
 4. **User connects Linear** → OAuth flow
+
    ```
    GET /api/oauth/linear/authorize?redirect_uri=...
    → User authorizes in Linear
@@ -197,6 +210,7 @@ Set these in Railway dashboard (Variables tab):
    ```
 
 5. **Backend runs workflows automatically:**
+
    - Scheduled daily ingestion (9 AM UTC)
    - Processes messages for all active tenants
    - Updates tickets based on conversations
@@ -214,6 +228,7 @@ Set these in Railway dashboard (Variables tab):
 ## 📊 Background Jobs Setup
 
 Railway will run:
+
 - **Web service**: FastAPI app (handles API requests)
 - **Worker service**: Celery worker (runs background jobs)
 - **Beat service**: Celery beat (schedules daily ingestion)
@@ -221,22 +236,25 @@ Railway will run:
 To set up multiple services in Railway:
 
 1. **Create Web Service:**
+
    - Uses `railway.json` or Procfile
    - Runs: `uvicorn app.api.main:app --host 0.0.0.0 --port $PORT`
 
 2. **Create Worker Service:**
+
    - Same codebase
-   - Command: `celery -A app.jobs.ingestion.celery_app worker --loglevel=info`
+   - Command: `celery -A app.jobs.celery.celery_app worker --loglevel=info`
    - Shares same environment variables
 
 3. **Create Beat Service:**
    - Same codebase
-   - Command: `celery -A app.jobs.ingestion.celery_app beat --loglevel=info`
+   - Command: `celery -A app.jobs.celery.celery_app beat --loglevel=info`
    - Shares same environment variables
 
 **Or use Railway's service configuration:**
 
 In Railway dashboard:
+
 - Add multiple services from same repo
 - Each service has different start command
 - All share same environment variables
@@ -283,6 +301,7 @@ curl "$APP_URL/api/oauth/slack/authorize?redirect_uri=https://your-frontend.com/
 ## 📈 Scaling
 
 Railway automatically:
+
 - Scales based on traffic
 - Handles multiple concurrent users
 - Isolates each tenant's data
@@ -302,4 +321,3 @@ Railway automatically:
 ---
 
 **Ready to deploy?** Start with `railway login`! 🚀
-

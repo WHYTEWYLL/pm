@@ -5,8 +5,8 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
 
 from ..storage.db import Database
-from ..ingestion.linear import LinearClient
-from ..ingestion.slack import SlackService
+from .ingestion.linear import LinearClient
+from .ingestion.slack import SlackService
 
 
 def generate_standup() -> Dict[str, Any]:

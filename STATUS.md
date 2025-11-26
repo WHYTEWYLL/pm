@@ -69,18 +69,16 @@
 ```
 pm/
 ├── app/
-│   ├── ingestion/          # Data sources (Slack, Linear, GitHub)
-│   │   ├── slack.py       ✅ Full implementation
-│   │   ├── linear.py      ✅ Full implementation
-│   │   └── github.py      ⚠️  Basic implementation
-│   │
-│   ├── workflows/          # Business logic
+│   ├── workflows/          # Business logic + data ingestion
+│   │   ├── ingestion/     # Data fetchers
+│   │   │   ├── slack.py   ✅ Full implementation
+│   │   │   ├── linear.py  ✅ Full implementation
+│   │   │   └── github.py  ⚠️  Basic implementation
+│   │   ├── ai/
+│   │   │   └── analyzer.py ✅ AI analysis helpers
 │   │   ├── process.py     ✅ AI-powered message processing
-│   │   ├── dev/
-│   │   │   ├── standup.py      ✅ Daily standup generation
-│   │   │   ├── move_tickets.py ✅ Ticket status changes
-│   │   │   └── update_tickets.py (legacy/unused)
-│   │   └── config.py      ✅ Dev-specific config
+│   │   ├── standup.py     ✅ Daily standup generation
+│   │   └── move_tickets.py ✅ Ticket status changes
 │   │
 │   ├── api/                # FastAPI REST API
 │   │   ├── main.py        ✅ FastAPI app
@@ -95,8 +93,10 @@ pm/
 │   │   ├── tenant_db.py   ✅ Multi-tenant Database
 │   │   └── encryption.py  ✅ Token encryption
 │   │
-│   ├── ai/                 # AI/LLM layer
-│   │   └── analyzer.py    ✅ Message analysis with OpenAI
+│   ├── jobs/               # Celery background tasks
+│   │   ├── celery.py      ✅ Celery app config
+│   │   ├── sync.py        ✅ Data sync tasks
+│   │   └── scheduled_workflows.py ✅ Standup scheduling
 │   │
 │   ├── jobs/               # Background jobs
 │   │   └── ingestion.py   ✅ Celery tasks structure

@@ -6,9 +6,9 @@ from tenacity import retry, wait_exponential, stop_after_attempt
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
-from ..config import settings
-from ..models import SlackMessage
-from ..state import RunState
+from ...config import settings
+from ...models import SlackMessage
+from ...state import RunState
 
 
 class SlackService:

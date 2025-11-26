@@ -5,8 +5,8 @@ from datetime import datetime, timezone, timedelta
 from github import Github
 from github.GithubException import GithubException
 
-from ..config import settings
-from ..models import GitHubPullRequest, GitHubIssue
+from ...config import settings
+from ...models import GitHubPullRequest, GitHubIssue
 
 
 class GitHubClient:
@@ -83,18 +83,22 @@ class GitHubClient:
         """
         repos = self.get_repositories(owner=owner, repo_names=repo_names)
         all_prs = []
-        
+
         print(f">>> GitHub list_pull_requests: checking {len(repos)} repositories")
         if since:
-            print(f">>> GitHub list_pull_requests: filtering PRs updated after {since.isoformat()}")
+            print(
+                f">>> GitHub list_pull_requests: filtering PRs updated after {since.isoformat()}"
+            )
 
         for repo in repos:
             try:
                 print(f">>> GitHub list_pull_requests: checking repo {repo.full_name}")
                 prs = repo.get_pulls(state=state, sort="updated", direction="desc")
-                pr_count = prs.totalCount if hasattr(prs, 'totalCount') else 'unknown'
-                print(f">>> GitHub list_pull_requests: found {pr_count} PRs in {repo.full_name} (state={state})")
-                
+                pr_count = prs.totalCount if hasattr(prs, "totalCount") else "unknown"
+                print(
+                    f">>> GitHub list_pull_requests: found {pr_count} PRs in {repo.full_name} (state={state})"
+                )
+
                 prs_checked = 0
                 prs_filtered = 0
                 prs_included = 0
@@ -105,12 +109,16 @@ class GitHubClient:
                     if since and pr.updated_at < since:
                         prs_filtered += 1
                         if prs_checked <= 3:  # Log first 3 filtered PRs for debugging
-                            print(f">>> GitHub list_pull_requests: PR #{pr.number} '{pr.title}' updated {pr.updated_at} (FILTERED - too old)")
+                            print(
+                                f">>> GitHub list_pull_requests: PR #{pr.number} '{pr.title}' updated {pr.updated_at} (FILTERED - too old)"
+                            )
                         continue
-                    
+
                     prs_included += 1
                     if prs_included <= 3:  # Log first 3 included PRs
-                        print(f">>> GitHub list_pull_requests: PR #{pr.number} '{pr.title}' updated {pr.updated_at} (INCLUDED)")
+                        print(
+                            f">>> GitHub list_pull_requests: PR #{pr.number} '{pr.title}' updated {pr.updated_at} (INCLUDED)"
+                        )
 
                     # Fetch detailed PR information
                     try:
@@ -353,10 +361,12 @@ class GitHubClient:
                         all_prs.append(github_pr)
 
                 if prs_checked > 0:
-                    print(f">>> GitHub list_pull_requests: {repo.full_name} - checked={prs_checked}, included={prs_included}, filtered={prs_filtered}")
+                    print(
+                        f">>> GitHub list_pull_requests: {repo.full_name} - checked={prs_checked}, included={prs_included}, filtered={prs_filtered}"
+                    )
             except GithubException as e:
                 print(f"⚠️  Could not fetch PRs from {repo.full_name}: {e}")
-        
+
         print(f">>> GitHub list_pull_requests: total PRs collected: {len(all_prs)}")
         return all_prs
 
@@ -381,18 +391,24 @@ class GitHubClient:
         """
         repos = self.get_repositories(owner=owner, repo_names=repo_names)
         all_issues = []
-        
+
         print(f">>> GitHub list_issues: checking {len(repos)} repositories")
         if since:
-            print(f">>> GitHub list_issues: filtering issues updated after {since.isoformat()}")
+            print(
+                f">>> GitHub list_issues: filtering issues updated after {since.isoformat()}"
+            )
 
         for repo in repos:
             try:
                 print(f">>> GitHub list_issues: checking repo {repo.full_name}")
                 issues = repo.get_issues(state=state, sort="updated", direction="desc")
-                issue_count = issues.totalCount if hasattr(issues, 'totalCount') else 'unknown'
-                print(f">>> GitHub list_issues: found {issue_count} issues in {repo.full_name} (state={state})")
-                
+                issue_count = (
+                    issues.totalCount if hasattr(issues, "totalCount") else "unknown"
+                )
+                print(
+                    f">>> GitHub list_issues: found {issue_count} issues in {repo.full_name} (state={state})"
+                )
+
                 issues_checked = 0
                 issues_filtered = 0
                 issues_skipped_pr = 0
@@ -409,12 +425,16 @@ class GitHubClient:
                     if since and issue.updated_at < since:
                         issues_filtered += 1
                         if issues_checked <= 3:  # Log first 3 filtered issues
-                            print(f">>> GitHub list_issues: Issue #{issue.number} '{issue.title}' updated {issue.updated_at} (FILTERED - too old)")
+                            print(
+                                f">>> GitHub list_issues: Issue #{issue.number} '{issue.title}' updated {issue.updated_at} (FILTERED - too old)"
+                            )
                         continue
-                    
+
                     issues_included += 1
                     if issues_included <= 3:  # Log first 3 included issues
-                        print(f">>> GitHub list_issues: Issue #{issue.number} '{issue.title}' updated {issue.updated_at} (INCLUDED)")
+                        print(
+                            f">>> GitHub list_issues: Issue #{issue.number} '{issue.title}' updated {issue.updated_at} (INCLUDED)"
+                        )
 
                     assignees = (
                         [a.login for a in issue.assignees] if issue.assignees else []
@@ -443,13 +463,15 @@ class GitHubClient:
                         ),
                     )
                     all_issues.append(github_issue)
-                
+
                 if issues_checked > 0:
-                    print(f">>> GitHub list_issues: {repo.full_name} - checked={issues_checked}, included={issues_included}, filtered={issues_filtered}, skipped_pr={issues_skipped_pr}")
+                    print(
+                        f">>> GitHub list_issues: {repo.full_name} - checked={issues_checked}, included={issues_included}, filtered={issues_filtered}, skipped_pr={issues_skipped_pr}"
+                    )
 
             except GithubException as e:
                 print(f"⚠️  Could not fetch issues from {repo.full_name}: {e}")
-        
+
         print(f">>> GitHub list_issues: total issues collected: {len(all_issues)}")
         return all_issues
 

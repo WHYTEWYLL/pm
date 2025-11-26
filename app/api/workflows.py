@@ -12,9 +12,9 @@ from pydantic import BaseModel
 from .tenant import get_tenant_id, get_tenant_db, check_subscription, check_tier_access
 from ..storage.tenant_db import TenantDatabase
 from ..storage.encryption import decrypt_token
-from ..ingestion.slack import SlackService
-from ..ingestion.linear import LinearClient
-from ..ingestion.github import GitHubClient
+from ..workflows.ingestion.slack import SlackService
+from ..workflows.ingestion.linear import LinearClient
+from ..workflows.ingestion.github import GitHubClient
 from ..storage.db import Database
 
 router = APIRouter(prefix="/api/workflows", tags=["workflows"])

@@ -5,7 +5,7 @@ import re
 from typing import Dict, Any
 
 from ..storage.db import Database
-from ..ingestion.linear import LinearClient
+from .ingestion.linear import LinearClient
 from .ai.analyzer import MessageAnalyzer
 
 
@@ -133,7 +133,9 @@ def process_messages(dry_run: bool = True, use_ai: bool = True) -> Dict[str, Any
                     workflow_name="process",
                     action_type="add_comment",
                     action_taken=f"Added comment to {comment_action['issue_identifier']}",
-                    reasoning=comment_action.get("ai_reasoning", "Matched message to issue"),
+                    reasoning=comment_action.get(
+                        "ai_reasoning", "Matched message to issue"
+                    ),
                     confidence=comment_action.get("confidence"),
                     entity_type="linear_ticket",
                     entity_id=comment_action["issue_id"],
@@ -159,13 +161,15 @@ def process_messages(dry_run: bool = True, use_ai: bool = True) -> Dict[str, Any
                 )
                 issue_action["created_identifier"] = created.get("identifier")
                 issue_action["created_url"] = created.get("url")
-                
+
                 # Log the decision
                 db.log_decision(
                     workflow_name="process",
                     action_type="create_ticket",
                     action_taken=f"Created ticket {created.get('identifier')}: {issue_action['title']}",
-                    reasoning=issue_action.get("ai_reasoning", "Detected TODO/action item"),
+                    reasoning=issue_action.get(
+                        "ai_reasoning", "Detected TODO/action item"
+                    ),
                     confidence=issue_action.get("confidence"),
                     entity_type="linear_ticket",
                     entity_id=created.get("id"),
