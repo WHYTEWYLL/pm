@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
 
-from ..storage.db import Database
+from ...storage.db import Database
 from .ingestion.linear import LinearClient
 from .ingestion.slack import SlackService
 

@@ -69,17 +69,6 @@
 ```
 pm/
 ├── app/
-│   ├── workflows/          # Business logic + data ingestion
-│   │   ├── ingestion/     # Data fetchers
-│   │   │   ├── slack.py   ✅ Full implementation
-│   │   │   ├── linear.py  ✅ Full implementation
-│   │   │   └── github.py  ⚠️  Basic implementation
-│   │   ├── ai/
-│   │   │   └── analyzer.py ✅ AI analysis helpers
-│   │   ├── process.py     ✅ AI-powered message processing
-│   │   ├── standup.py     ✅ Daily standup generation
-│   │   └── move_tickets.py ✅ Ticket status changes
-│   │
 │   ├── api/                # FastAPI REST API
 │   │   ├── main.py        ✅ FastAPI app
 │   │   ├── oauth.py       ✅ OAuth flows
@@ -88,18 +77,25 @@ pm/
 │   │   ├── local_dev.py   ✅ Local dev helpers
 │   │   └── stripe.py      ⚠️  Placeholder (optional)
 │   │
+│   ├── jobs/               # Background jobs + workflows
+│   │   ├── celery.py      ✅ Celery app config
+│   │   ├── sync.py        ✅ Data sync tasks
+│   │   ├── scheduled_workflows.py ✅ Standup scheduling
+│   │   └── workflows/     # Business logic
+│   │       ├── ingestion/ # Data fetchers
+│   │       │   ├── slack.py   ✅ Full implementation
+│   │       │   ├── linear.py  ✅ Full implementation
+│   │       │   └── github.py  ⚠️  Basic implementation
+│   │       ├── ai/
+│   │       │   └── analyzer.py ✅ AI analysis
+│   │       ├── process.py     ✅ Message processing
+│   │       ├── standup.py     ✅ Daily standup
+│   │       └── move_tickets.py ✅ Ticket status
+│   │
 │   ├── storage/            # Database layer
 │   │   ├── db.py          ✅ Original Database (single-tenant)
 │   │   ├── tenant_db.py   ✅ Multi-tenant Database
 │   │   └── encryption.py  ✅ Token encryption
-│   │
-│   ├── jobs/               # Celery background tasks
-│   │   ├── celery.py      ✅ Celery app config
-│   │   ├── sync.py        ✅ Data sync tasks
-│   │   └── scheduled_workflows.py ✅ Standup scheduling
-│   │
-│   ├── jobs/               # Background jobs
-│   │   └── ingestion.py   ✅ Celery tasks structure
 │   │
 │   ├── models.py           ✅ Data models
 │   ├── config.py           ✅ Configuration management

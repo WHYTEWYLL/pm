@@ -4,7 +4,7 @@ from __future__ import annotations
 import re
 from typing import Dict, Any
 
-from ..storage.db import Database
+from ...storage.db import Database
 from .ingestion.linear import LinearClient
 from .ai.analyzer import MessageAnalyzer
 

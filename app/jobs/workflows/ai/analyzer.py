@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import List, Dict, Any
 from openai import OpenAI
 
-from ...config import settings
+from ....config import settings
 
 
 class AIAnalyzer:

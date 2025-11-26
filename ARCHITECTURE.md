@@ -33,7 +33,7 @@ pm/
 
 ## 📦 Layer Responsibilities
 
-### **Ingestion Layer** (`app/workflows/ingestion/`)
+### **Ingestion Layer** (`app/jobs/workflows/ingestion/`)
 
 **Purpose:** Fetch raw data from external sources
 
@@ -80,7 +80,7 @@ pm/
 
 ---
 
-### **Workflows Layer** (`app/workflows/`)
+### **Workflows Layer** (`app/jobs/workflows/`)
 
 **Purpose:** Orchestrate business logic by combining layers
 
@@ -175,13 +175,13 @@ pm/
 
 ### Add New Data Source (e.g., GitHub)
 
-1. Create `app/workflows/ingestion/github.py`
+1. Create `app/jobs/workflows/ingestion/github.py`
 2. Implement fetch methods
 3. Use in existing or new workflows
 
 ### Add New Workflow
 
-1. Create `app/workflows/my_workflow.py`
+1. Create `app/jobs/workflows/my_workflow.py`
 2. Import needed ingestion/storage/ai modules
 3. Orchestrate the business logic
 4. Add CLI command in `cli.py`
@@ -197,7 +197,7 @@ pm/
 ## 📝 Example: Adding GitHub Support
 
 ```python
-# 1. Create app/workflows/ingestion/github.py
+# 1. Create app/jobs/workflows/ingestion/github.py
 class GitHubClient:
     def fetch_pull_requests(self):
         # Fetch PRs from GitHub API

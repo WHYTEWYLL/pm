@@ -12,7 +12,7 @@ from datetime import datetime, timezone, timedelta
 from .tenant import get_tenant_id
 from ..storage.tenant_db import TenantDatabase
 from ..storage.encryption import encrypt_token, decrypt_token
-from ..workflows.ingestion.slack import SlackService
+from ..jobs.workflows.ingestion.slack import SlackService
 
 router = APIRouter(prefix="/api/oauth", tags=["oauth"])
 

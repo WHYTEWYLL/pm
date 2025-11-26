@@ -5,7 +5,7 @@ from typing import Dict, Any, List
 from datetime import datetime, timezone, timedelta
 import json
 
-from ..storage.db import Database
+from ...storage.db import Database
 from .ingestion.linear import LinearClient
 from .ai.analyzer import AIAnalyzer
 

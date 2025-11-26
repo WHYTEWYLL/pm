@@ -5,8 +5,8 @@ from datetime import datetime, timezone, timedelta
 from github import Github
 from github.GithubException import GithubException
 
-from ...config import settings
-from ...models import GitHubPullRequest, GitHubIssue
+from ....config import settings
+from ....models import GitHubPullRequest, GitHubIssue
 
 
 class GitHubClient:

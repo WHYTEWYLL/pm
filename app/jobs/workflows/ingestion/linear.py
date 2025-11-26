@@ -4,8 +4,8 @@ from typing import Optional, Dict, Any, List
 import logging
 import requests
 
-from ...config import settings
-from ...models import LinearIssue
+from ....config import settings
+from ....models import LinearIssue
 
 
 class LinearClient:

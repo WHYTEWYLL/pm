@@ -12,9 +12,9 @@ from pydantic import BaseModel
 from .tenant import get_tenant_id, get_tenant_db, check_subscription, check_tier_access
 from ..storage.tenant_db import TenantDatabase
 from ..storage.encryption import decrypt_token
-from ..workflows.ingestion.slack import SlackService
-from ..workflows.ingestion.linear import LinearClient
-from ..workflows.ingestion.github import GitHubClient
+from ..jobs.workflows.ingestion.slack import SlackService
+from ..jobs.workflows.ingestion.linear import LinearClient
+from ..jobs.workflows.ingestion.github import GitHubClient
 from ..storage.db import Database
 
 router = APIRouter(prefix="/api/workflows", tags=["workflows"])
@@ -318,7 +318,7 @@ async def get_standup(
     team_id = config.get("linear_team_id") if config else None
 
     # Import and call the actual standup workflow
-    from ..workflows.standup import generate_standup
+    from ..jobs.workflows.standup import generate_standup
 
     # Temporarily set credentials for the workflow
     original_linear_key = os.getenv("LINEAR_API_KEY")
@@ -401,7 +401,7 @@ async def publish_standup_endpoint(
     config = db_tenant.get_tenant_config()
     team_id = config.get("linear_team_id") if config else None
 
-    from ..workflows.standup import publish_standup
+    from ..jobs.workflows.standup import publish_standup
 
     # Temporarily set credentials for the workflow
     original_linear_key = os.getenv("LINEAR_API_KEY")
@@ -455,7 +455,7 @@ async def send_standup_dm_endpoint(
     config = db_tenant.get_tenant_config()
     team_id = config.get("linear_team_id") if config else None
 
-    from ..workflows.standup import send_standup_dm
+    from ..jobs.workflows.standup import send_standup_dm
 
     # Set credentials
     original_linear_key = os.getenv("LINEAR_API_KEY")
@@ -503,7 +503,7 @@ async def process_messages(
     team_id = config.get("linear_team_id") if config else None
 
     # Import and call the actual process workflow
-    from ..workflows.process import process_messages as process_workflow
+    from ..jobs.workflows.process import process_messages as process_workflow
 
     # Set credentials
     original_linear_key = os.getenv("LINEAR_API_KEY")
@@ -548,7 +548,7 @@ async def move_tickets(
     team_id = config.get("linear_team_id") if config else None
 
     # Import and call the actual move_tickets workflow
-    from ..workflows.move_tickets import process_ticket_status_changes
+    from ..jobs.workflows.move_tickets import process_ticket_status_changes
 
     # Set credentials
     original_linear_key = os.getenv("LINEAR_API_KEY")

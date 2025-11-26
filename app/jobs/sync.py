@@ -10,9 +10,9 @@ from typing import Dict, List, Any
 from .celery import celery_app
 from ..storage.tenant_db import TenantDatabase
 from ..storage.encryption import decrypt_token
-from ..workflows.ingestion.slack import SlackService
-from ..workflows.ingestion.linear import LinearClient
-from ..workflows.ingestion.github import GitHubClient
+from .workflows.ingestion.slack import SlackService
+from .workflows.ingestion.linear import LinearClient
+from .workflows.ingestion.github import GitHubClient
 from ..storage.db import Database
 
 logger = logging.getLogger("jobs.sync")

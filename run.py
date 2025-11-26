@@ -18,10 +18,10 @@ Usage:
   python3 run.py stats      → Database statistics
 
 Or run modules directly:
-  python3 -m app.workflows.ingestion.slack
-  python3 -m app.workflows.ingestion.linear
-  python3 -m app.workflows.process
-  python3 -m app.workflows.standup
+  python3 -m app.jobs.workflows.ingestion.slack
+  python3 -m app.jobs.workflows.ingestion.linear
+  python3 -m app.jobs.workflows.process
+  python3 -m app.jobs.workflows.standup
 """
         )
         return
@@ -30,7 +30,7 @@ Or run modules directly:
     args = sys.argv[2:]
 
     if command == "sync":
-        from app.workflows.ingestion.slack import run_ingestion
+        from app.jobs.workflows.ingestion.slack import run_ingestion
 
         result = run_ingestion(include_threads="--threads" in args)
         mode = "🔄 Incremental" if result["mode"] == "incremental" else "📥 Initial"
@@ -40,7 +40,7 @@ Or run modules directly:
         print(f"📊 Total: {result['db_stats']['total']}")
 
     elif command == "linear":
-        from app.workflows.ingestion.linear import run_ingestion
+        from app.jobs.workflows.ingestion.linear import run_ingestion
 
         result = run_ingestion(assignee_only="--all" not in args)
         scope = "All" if "--all" in args else "Your"
@@ -56,7 +56,7 @@ Or run modules directly:
                 print(f"{emoji} {state_type.title()}: {len(by_state[state_type])}")
 
     elif command == "process":
-        from app.workflows.process import process_messages
+        from app.jobs.workflows.process import process_messages
 
         execute = "--execute" in args
         print(f"{'⚡ EXECUTING' if execute else '🔍 DRY RUN'}\n")
@@ -74,7 +74,7 @@ Or run modules directly:
             print("\n💡 Add --execute to apply")
 
     elif command == "standup":
-        from app.workflows.standup import generate_standup
+        from app.jobs.workflows.standup import generate_standup
         from datetime import datetime, timezone
 
         data = generate_standup()
