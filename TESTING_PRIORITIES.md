@@ -5,6 +5,7 @@ This guide shows how to test the `priorities_to_slack` workflow that posts devel
 ## Prerequisites
 
 1. **Environment Variables** (in `.env` or exported):
+
    ```bash
    SLACK_TOKEN=xoxb-your-slack-token
    LINEAR_API_KEY=lin_api_your-key
@@ -46,12 +47,14 @@ python3 -m app.jobs.workflows.priorities_to_slack --post
 ### 2. API Endpoint Testing
 
 Start the server:
+
 ```bash
 export ENV=development
 python3 -m uvicorn app.api.main:app --reload --port 8000
 ```
 
 **Option A: Using local dev tenant (no auth needed)**
+
 ```bash
 # First, setup local tenant
 curl -X POST "http://localhost:8000/local-dev/setup-tenant?tenant_id=local-dev-tenant"
@@ -73,6 +76,7 @@ curl -X POST "http://localhost:8000/api/workflows/priorities-to-slack" \
 ```
 
 **Option B: With authentication**
+
 ```bash
 # Register/login first
 TOKEN=$(curl -X POST http://localhost:8000/api/auth/login \
@@ -117,6 +121,7 @@ else:
 ```
 
 Run it:
+
 ```bash
 python3 test_priorities.py
 ```
@@ -139,6 +144,7 @@ print(result)
 ```
 
 Or test async:
+
 ```python
 from app.jobs.scheduled_workflows import post_priorities_to_slack_for_tenant
 
@@ -151,6 +157,7 @@ print(f"Result: {task.get(timeout=30)}")
 ## Expected Output
 
 ### Console Output (CLI)
+
 ```
 📋 Fetching developer priorities from Linear...
 
@@ -168,7 +175,9 @@ print(f"Result: {task.get(timeout=30)}")
 ```
 
 ### Slack Message Format
+
 The Slack message will show:
+
 - Header: "📋 Developer Priorities - [Date]"
 - For each developer:
   - Name
@@ -180,18 +189,22 @@ The Slack message will show:
 ## Troubleshooting
 
 ### "Slack not connected" error
+
 - Make sure you've run the local dev setup: `curl -X POST "http://localhost:8000/local-dev/setup-tenant"`
 - Or ensure OAuth credentials are stored in the tenant database
 
 ### "Linear not connected" error
+
 - Check that `LINEAR_API_KEY` is set in environment
 - Run local dev setup to store credentials
 
 ### "No target channel configured" error
+
 - Either provide `channel_id` in the API request
 - Or configure `slack_target_channel_ids` in tenant config
 
 ### No issues showing
+
 - Check that Linear team has open issues
 - Verify `LINEAR_TEAM_ID` is correct (or set to None to fetch all teams)
 - Try with `assignee_only=False` to see all issues
@@ -208,4 +221,3 @@ The Slack message will show:
 - [ ] Handles missing channel gracefully
 - [ ] Shows correct developer grouping
 - [ ] Shows unassigned issues when present
-

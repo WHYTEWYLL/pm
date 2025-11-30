@@ -55,19 +55,13 @@ def get_developer_priorities(
     result: Dict[str, Dict[str, Any]] = {}
     for assignee_name, assignee_issues in by_assignee.items():
         in_progress = [
-            i
-            for i in assignee_issues
-            if i.get("state", {}).get("type") == "started"
+            i for i in assignee_issues if i.get("state", {}).get("type") == "started"
         ]
         todo = [
-            i
-            for i in assignee_issues
-            if i.get("state", {}).get("type") == "unstarted"
+            i for i in assignee_issues if i.get("state", {}).get("type") == "unstarted"
         ]
         backlog = [
-            i
-            for i in assignee_issues
-            if i.get("state", {}).get("type") == "backlog"
+            i for i in assignee_issues if i.get("state", {}).get("type") == "backlog"
         ]
 
         result[assignee_name] = {
@@ -335,4 +329,3 @@ if __name__ == "__main__":
         print(f"✅ Posted successfully! Message TS: {result.get('message_ts')}")
     else:
         print("\n💡 Add --post to actually post to Slack")
-
