@@ -19,11 +19,6 @@ celery_app.conf.update(
 
 # Beat schedule - all scheduled tasks
 celery_app.conf.beat_schedule = {
-    # Hourly sync for all tenants
-    "hourly-sync": {
-        "task": "app.jobs.sync.hourly_sync_for_all_tenants",
-        "schedule": crontab(minute=0),  # Every hour at :00
-    },
     # Daily full sync at 6 AM UTC
     "daily-sync": {
         "task": "app.jobs.sync.daily_sync_for_all_tenants",

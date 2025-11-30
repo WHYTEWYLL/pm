@@ -15,6 +15,7 @@ Usage:
   python3 run.py linear     → Fetch Linear issues  
   python3 run.py process    → AI analysis (add --execute to apply)
   python3 run.py standup    → Daily standup report
+  python3 run.py priorities → Developer priorities (add --post to post to Slack)
   python3 run.py stats      → Database statistics
 
 Or run modules directly:
@@ -85,6 +86,48 @@ Or run modules directly:
         print(
             f"💬 Slack: {len(data['tracked_messages'])} tracked, {len(data['untracked_messages'])} untracked"
         )
+
+    elif command == "priorities":
+        from app.jobs.workflows.priorities_to_slack import get_developer_priorities
+        import os
+
+        print("\n📋 Fetching developer priorities from Linear...")
+        priorities = get_developer_priorities()
+
+        print(f"\n📊 Summary:")
+        print(f"   Total issues: {priorities['total_issues']}")
+        print(f"   Developers: {priorities['total_developers']}")
+        print(f"   Unassigned: {len(priorities['unassigned'])}")
+
+        print(f"\n👥 By Developer:")
+        for assignee_name, dev_data in sorted(
+            priorities["by_assignee"].items(),
+            key=lambda x: x[1]["total"],
+            reverse=True,
+        ):
+            in_progress = len(dev_data["in_progress"])
+            todo = len(dev_data["todo"])
+            backlog = len(dev_data["backlog"])
+            print(
+                f"   {assignee_name}: {in_progress} in progress, {todo} todo, {backlog} backlog"
+            )
+
+        if "--post" in args:
+            channel_id = os.getenv("SLACK_CHANNEL_ID")
+            if not channel_id:
+                print("\n❌ Error: SLACK_CHANNEL_ID environment variable required")
+                print("   Set it with: export SLACK_CHANNEL_ID=C1234567890")
+                return
+
+            from app.jobs.workflows.priorities_to_slack import post_priorities_to_slack
+
+            print(f"\n📤 Posting to Slack channel {channel_id}...")
+            result = post_priorities_to_slack(channel_id=channel_id)
+            print(f"✅ Posted successfully! Message TS: {result.get('message_ts')}")
+        else:
+            print(
+                "\n💡 Add --post to actually post to Slack (requires SLACK_CHANNEL_ID env var)"
+            )
 
     elif command == "stats":
         from app.storage.db import Database

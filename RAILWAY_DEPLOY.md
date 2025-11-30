@@ -243,12 +243,12 @@ To set up multiple services in Railway:
 2. **Create Worker Service:**
 
    - Same codebase
-   - Command: `celery -A app.jobs.celery.celery_app worker --loglevel=info`
+   - Command: `celery -A app.jobs worker --loglevel=info`
    - Shares same environment variables
 
 3. **Create Beat Service:**
    - Same codebase
-   - Command: `celery -A app.jobs.celery.celery_app beat --loglevel=info`
+   - Command: `celery -A app.jobs beat --loglevel=info`
    - Shares same environment variables
 
 **Or use Railway's service configuration:**

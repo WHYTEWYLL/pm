@@ -571,3 +571,89 @@ async def move_tickets(
             os.environ["LINEAR_API_KEY"] = original_linear_key
         if original_team_id:
             os.environ["LINEAR_TEAM_ID"] = original_team_id
+
+
+class PostPrioritiesRequest(BaseModel):
+    channel_id: Optional[str] = (
+        None  # If not provided, uses first target channel from config
+    )
+
+
+@router.post("/priorities-to-slack")
+async def post_priorities_to_slack_endpoint(
+    req: PostPrioritiesRequest = Body(default=PostPrioritiesRequest()),
+    tenant_id: str = Depends(get_tenant_id),
+):
+    """Post developer priorities from Linear to Slack channel."""
+    if not check_subscription(tenant_id):
+        raise HTTPException(status_code=403, detail="Subscription required")
+
+    db_tenant = get_tenant_db(tenant_id)
+
+    # Check Linear connection
+    linear_creds = db_tenant.get_oauth_credentials("linear")
+    if not linear_creds:
+        raise HTTPException(status_code=400, detail="Linear not connected")
+
+    # Check Slack connection
+    slack_creds = db_tenant.get_oauth_credentials("slack")
+    if not slack_creds:
+        raise HTTPException(status_code=400, detail="Slack not connected")
+
+    linear_token = decrypt_token(linear_creds["access_token"])
+    slack_token = decrypt_token(slack_creds["access_token"])
+
+    config = db_tenant.get_tenant_config()
+    team_id = config.get("linear_team_id") if config else None
+
+    # Get target channel from config if not provided
+    channel_id = req.channel_id
+    if not channel_id:
+        target_channel_ids = (
+            config.get("slack_target_channel_ids", []) if config else []
+        )
+        if isinstance(target_channel_ids, str):
+            try:
+                target_channel_ids = json.loads(target_channel_ids)
+            except json.JSONDecodeError:
+                target_channel_ids = []
+
+        if not target_channel_ids:
+            raise HTTPException(
+                status_code=400,
+                detail="No target channel configured. Provide channel_id or configure slack_target_channel_ids in tenant config.",
+            )
+        # Use first channel if multiple
+        channel_id = (
+            target_channel_ids[0]
+            if isinstance(target_channel_ids, list)
+            else target_channel_ids
+        )
+
+    from ..jobs.workflows.priorities_to_slack import post_priorities_to_slack
+
+    # Set credentials
+    original_linear_key = os.getenv("LINEAR_API_KEY")
+    original_team_id = os.getenv("LINEAR_TEAM_ID")
+    os.environ["LINEAR_API_KEY"] = linear_token
+    if team_id:
+        os.environ["LINEAR_TEAM_ID"] = team_id
+    os.environ["CURRENT_TENANT_ID"] = tenant_id
+
+    try:
+        result = post_priorities_to_slack(
+            channel_id=channel_id,
+            slack_token=slack_token,
+            linear_api_key=linear_token,
+            linear_team_id=team_id,
+            assignee_only=False,  # Show all issues
+        )
+        return result
+    except Exception as e:
+        logger.exception("Failed to post priorities to Slack")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if original_linear_key:
+            os.environ["LINEAR_API_KEY"] = original_linear_key
+        if original_team_id:
+            os.environ["LINEAR_TEAM_ID"] = original_team_id

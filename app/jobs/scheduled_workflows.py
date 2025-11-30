@@ -152,3 +152,101 @@ def send_morning_standups_for_all_tenants():
 
     logger.info(f"Morning standups scheduled for {scheduled} tenants")
     return {"status": "scheduled", "tenants": scheduled}
+
+
+@celery_app.task(bind=True, max_retries=2)
+def post_priorities_to_slack_for_tenant(self, tenant_id: str, channel_id: str = None):
+    """Post developer priorities to Slack channel for a specific tenant."""
+    try:
+        db = TenantDatabase(tenant_id=tenant_id)
+
+        # Check Slack connection
+        slack_creds = db.get_oauth_credentials("slack")
+        if not slack_creds:
+            return {"status": "skipped", "reason": "Slack not connected"}
+
+        # Check Linear connection
+        linear_creds = db.get_oauth_credentials("linear")
+        if not linear_creds:
+            return {"status": "skipped", "reason": "Linear not connected"}
+
+        # Set tenant context
+        os.environ["CURRENT_TENANT_ID"] = tenant_id
+
+        # Decrypt tokens
+        slack_token = decrypt_token(slack_creds["access_token"])
+        linear_token = decrypt_token(linear_creds["access_token"])
+
+        # Get config
+        config = db.get_tenant_config()
+        team_id = config.get("linear_team_id") if config else None
+
+        # Get target channel from config if not provided
+        if not channel_id:
+            target_channel_ids = (
+                config.get("slack_target_channel_ids", []) if config else []
+            )
+            if isinstance(target_channel_ids, str):
+                import json
+
+                try:
+                    target_channel_ids = json.loads(target_channel_ids)
+                except json.JSONDecodeError:
+                    target_channel_ids = []
+
+            if not target_channel_ids:
+                return {"status": "skipped", "reason": "No target channel configured"}
+            # Use first channel if multiple
+            channel_id = (
+                target_channel_ids[0]
+                if isinstance(target_channel_ids, list)
+                else target_channel_ids
+            )
+
+        # Import and post priorities
+        from .workflows.priorities_to_slack import post_priorities_to_slack
+
+        result = post_priorities_to_slack(
+            channel_id=channel_id,
+            slack_token=slack_token,
+            linear_api_key=linear_token,
+            linear_team_id=team_id,
+            assignee_only=False,  # Show all issues, not just assigned
+        )
+
+        if result.get("status") == "success":
+            # Log activity
+            log_activity(
+                tenant_id,
+                "post",
+                f"Posted developer priorities to Slack channel",
+                {
+                    "channel_id": channel_id,
+                    "total_issues": result.get("total_issues", 0),
+                    "total_developers": result.get("total_developers", 0),
+                },
+            )
+
+        logger.info(f"Priorities posted to Slack for tenant {tenant_id}")
+        return result
+
+    except Exception as e:
+        logger.exception(f"Failed to post priorities to Slack for tenant {tenant_id}")
+        raise self.retry(exc=e, countdown=300)  # Retry after 5 minutes
+
+
+@celery_app.task
+def post_priorities_to_slack_for_all_tenants():
+    """Post developer priorities to Slack for all active tenants."""
+    tenant_ids = get_active_tenants()
+
+    scheduled = 0
+    for tenant_id in tenant_ids:
+        settings = get_workflow_settings(tenant_id)
+        # Check if priorities_to_slack is enabled (default to True if not set)
+        if settings.get("priorities_to_slack", True):
+            post_priorities_to_slack_for_tenant.delay(tenant_id)
+            scheduled += 1
+
+    logger.info(f"Priorities posting scheduled for {scheduled} tenants")
+    return {"status": "scheduled", "tenants": scheduled}

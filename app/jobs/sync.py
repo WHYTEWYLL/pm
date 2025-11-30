@@ -222,20 +222,35 @@ def ingest_slack_for_tenant(self, tenant_id: str):
         result = service.ingest(
             include_threads=True,
             target_channel_ids=target_channel_ids if target_channel_ids else None,
-            force_last_24h=True,
+            force_last_24h=True,  # Always fetch last 24h for daily sync
         )
 
         # Log activity
         stored = result.get("stored", 0) if result else 0
+        fetched = result.get("fetched", 0) if result else 0
+        mode = result.get("mode", "unknown") if result else "unknown"
+
+        logger.info(
+            f"Slack ingestion for tenant {tenant_id}: mode={mode}, fetched={fetched}, stored={stored}"
+        )
+
         if stored > 0:
             log_activity(
                 tenant_id,
                 "sync",
-                f"Synced {stored} new Slack messages",
-                {"source": "slack", "count": stored},
+                f"Synced {stored} new Slack messages (fetched {fetched}, mode: {mode})",
+                {
+                    "source": "slack",
+                    "count": stored,
+                    "fetched": fetched,
+                    "mode": mode,
+                },
+            )
+        elif fetched == 0:
+            logger.warning(
+                f"No messages fetched for tenant {tenant_id} - check Slack connection and channel configuration"
             )
 
-        logger.info(f"Slack ingestion completed for tenant {tenant_id}: {result}")
         return {"status": "success", "result": result}
 
     except Exception as e:
@@ -390,29 +405,20 @@ def ingest_github_for_tenant(self, tenant_id: str):
 
 
 @celery_app.task
-def hourly_sync_for_all_tenants():
-    """Run hourly sync for all active tenants with auto_sync enabled."""
-    tenant_ids = get_active_tenants()
-
-    scheduled = 0
-    for tenant_id in tenant_ids:
-        # Queue ingestion tasks
-        ingest_slack_for_tenant.delay(tenant_id)
-        ingest_linear_for_tenant.delay(tenant_id)
-        ingest_github_for_tenant.delay(tenant_id)
-        scheduled += 1
-
-    logger.info(f"Hourly sync scheduled for {scheduled} tenants")
-    return {"status": "scheduled", "tenants": scheduled}
-
-
-@celery_app.task
 def daily_sync_for_all_tenants():
-    """Run daily sync for all active tenants (full sync)."""
+    """Run daily sync for all active tenants with auto_sync enabled (full sync)."""
     tenant_ids = get_active_tenants()
 
     scheduled = 0
     for tenant_id in tenant_ids:
+        # Check if auto_sync is enabled for this tenant
+        settings = get_workflow_settings(tenant_id)
+        if not settings.get("auto_sync", True):
+            logger.debug(
+                f"Skipping daily sync for tenant {tenant_id} - auto_sync disabled"
+            )
+            continue
+
         # Queue ingestion tasks
         ingest_slack_for_tenant.delay(tenant_id)
         ingest_linear_for_tenant.delay(tenant_id)

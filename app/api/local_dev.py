@@ -16,7 +16,7 @@ router = APIRouter(prefix="/local-dev", tags=["local-dev"])
 async def setup_local_tenant(tenant_id: str = "local-dev-tenant"):
     """Setup local tenant with existing env vars (no OAuth)."""
     db = TenantDatabase(tenant_id=tenant_id)
-    
+
     # Create tenant if doesn't exist
     with db._conn() as conn:
         if db.use_postgres:
@@ -38,12 +38,16 @@ async def setup_local_tenant(tenant_id: str = "local-dev-tenant"):
                 """,
                 [tenant_id, "local@dev.com", "active", "scale"],
             )
-    
+
     # Store credentials from env vars (for local dev, store plaintext or use a simple encoding)
     # In production, these should be encrypted
     if settings.slack_token:
         # For local dev, store as-is (encryption will be handled by decrypt_token)
-        token_to_store = encrypt_token(settings.slack_token) if os.getenv("ENCRYPTION_KEY") else settings.slack_token
+        token_to_store = (
+            encrypt_token(settings.slack_token)
+            if os.getenv("ENCRYPTION_KEY")
+            else settings.slack_token
+        )
         db.save_oauth_credentials(
             service="slack",
             access_token=token_to_store,
@@ -52,9 +56,13 @@ async def setup_local_tenant(tenant_id: str = "local-dev-tenant"):
             workspace_name="Local Slack Workspace",
             scopes="local-dev",
         )
-    
+
     if settings.linear_api_key:
-        token_to_store = encrypt_token(settings.linear_api_key) if os.getenv("ENCRYPTION_KEY") else settings.linear_api_key
+        token_to_store = (
+            encrypt_token(settings.linear_api_key)
+            if os.getenv("ENCRYPTION_KEY")
+            else settings.linear_api_key
+        )
         db.save_oauth_credentials(
             service="linear",
             access_token=token_to_store,
@@ -63,9 +71,13 @@ async def setup_local_tenant(tenant_id: str = "local-dev-tenant"):
             workspace_name="Local Linear Team",
             scopes="local-dev",
         )
-    
+
     if settings.github_token:
-        token_to_store = encrypt_token(settings.github_token) if os.getenv("ENCRYPTION_KEY") else settings.github_token
+        token_to_store = (
+            encrypt_token(settings.github_token)
+            if os.getenv("ENCRYPTION_KEY")
+            else settings.github_token
+        )
         db.save_oauth_credentials(
             service="github",
             access_token=token_to_store,
@@ -74,7 +86,7 @@ async def setup_local_tenant(tenant_id: str = "local-dev-tenant"):
             workspace_name="Local GitHub",
             scopes="local-dev",
         )
-    
+
     # Setup config (channel IDs should be configured via tenant settings)
     config = {
         "slack_target_channel_ids": [],
@@ -83,7 +95,7 @@ async def setup_local_tenant(tenant_id: str = "local-dev-tenant"):
         "workflow_settings": {},
     }
     db.update_tenant_config(config)
-    
+
     return {
         "status": "setup_complete",
         "tenant_id": tenant_id,
@@ -95,4 +107,3 @@ async def setup_local_tenant(tenant_id: str = "local-dev-tenant"):
 async def get_local_tenant_id():
     """Get the local dev tenant ID."""
     return {"tenant_id": "local-dev-tenant"}
-
